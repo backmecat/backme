@@ -15,8 +15,9 @@
     <meta name="theme-color" content="#FFF8F0">
     <meta name="format-detection" content="telephone=no">
 
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = { 
             theme: {
@@ -362,7 +363,7 @@ body {
                 
                  <div class="md:col-span-2 space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1">出生日期 *</label>
-                    <input type="date" class="input-style focus:ring-2 focus:ring-brand-purple/20">
+                    <input type="date" class="input-style required-field focus:ring-2 focus:ring-brand-purple/20">
                 </div>
             </div>
         </section>
@@ -407,7 +408,7 @@ body {
                 </div>
                 <div class="col-span-2 md:col-span-1 space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1">出生日期 *</label>
-                    <input type="date" class="input-style text-center focus:ring-2 focus:ring-brand-purple/20">
+                    <input type="date" class="input-style required-field text-center focus:ring-2 focus:ring-brand-purple/20">
                 </div>
             </div>
         </section>
@@ -421,12 +422,12 @@ body {
                 <div class="relative max-w-[280px] mx-auto shadow-sm group mt-4">
                     <label class="absolute -top-7 left-0 right-0 text-center text-xs font-bold text-gray-400">總價 Total Price *</label>
                     <span class="absolute left-6 top-1/2 -translate-y-1/2 text-brand-purple font-black text-xl">NT$</span>
-                    <input type="number" id="totalPrice" class="w-full text-center text-4xl font-black text-brand-text bg-white border-2 border-brand-purple/20 rounded-3xl py-6 pl-8 focus:outline-none focus:border-brand-purple focus:shadow-glow-purple transition-all placeholder:text-gray-200" placeholder="0">
+                    <input type="tel" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="totalPrice" class="w-full required-field text-center text-4xl font-black text-brand-text bg-white border-2 border-brand-purple/20 rounded-3xl py-6 pl-8 focus:outline-none focus:border-brand-purple focus:shadow-glow-purple transition-all placeholder:text-gray-200" placeholder="0">
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1 text-center">交付日期 Delivery Date *</label>
-                    <input type="date" class="input-style text-center focus:ring-2 focus:ring-brand-purple/20 bg-white/50">
+                    <input type="date" class="input-style required-field text-center focus:ring-2 focus:ring-brand-purple/20 bg-white/50">
                 </div>
 
                 <div class="h-px bg-brand-purple/10 w-full my-4"></div>
@@ -444,16 +445,18 @@ body {
                         </label>
                     </div>
 
-                    <div id="splitPaymentFields" class="hidden grid grid-cols-2 gap-4 animate-fade-in bg-white/50 p-4 rounded-2xl border border-white">
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-gray-400 block text-center">定金</label>
-                            <input type="number" class="input-style text-center border-gray-200/80" placeholder="0">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-gray-400 block text-center">尾款</label>
-                            <input type="number" class="input-style text-center border-gray-200/80" placeholder="0">
-                        </div>
-                    </div>
+<div id="splitPaymentFields" class="hidden grid grid-cols-2 gap-4 animate-fade-in bg-white/50 p-4 rounded-2xl border border-white">
+    <div class="space-y-1">
+        <label class="text-xs font-bold text-gray-400 block text-center">定金</label>
+        <!-- 加入 id="depositInput", 改用 tel, 加入限制 -->
+        <input type="tel" id="depositInput" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input-style text-center border-gray-200/80 font-mono text-lg font-bold" placeholder="0">
+    </div>
+    <div class="space-y-1">
+        <label class="text-xs font-bold text-gray-400 block text-center">尾款</label>
+        <!-- 加入 id="balanceInput", 改用 tel, 加入限制 -->
+        <input type="tel" id="balanceInput" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input-style text-center border-gray-200/80 font-mono text-lg font-bold" placeholder="0">
+    </div>
+</div>
                 </div>
 
                 <div class="mt-6">
@@ -1329,6 +1332,43 @@ body {
     </div>
 
     <script>
+// === Supabase 設定 ===
+const SUPABASE_URL = 'https://gevoefsyhnboricfepay.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdldm9lZnN5aG5ib3JpY2ZlcGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNzEzOTMsImV4cCI6MjA4Mzk0NzM5M30.hI6PhjEycYj5njOCCZVcBwa8VX5F5g-mD3qXxGeYJLo';
+
+// ✅ 修正：變數改名為 _supabase，避免跟 CDN 衝突
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// 輔助函式：將 Base64 簽名轉為 Blob 以便上傳
+function dataURLtoBlob(dataurl) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], {type:mime});
+}
+
+// 輔助函式：上傳簽名 (✅ 已修正為使用 _supabase)
+async function uploadSignature(folder, name, dataUrl) {
+    const blob = dataURLtoBlob(dataUrl);
+    const fileName = `${folder}/${Date.now()}_${name}.png`;
+    
+    const { data, error } = await _supabase // <--- 這裡改了
+        .storage
+        .from('signatures')
+        .upload(fileName, blob);
+
+    if (error) throw error;
+    
+    const { data: { publicUrl } } = _supabase // <--- 這裡改了
+        .storage
+        .from('signatures')
+        .getPublicUrl(fileName);
+        
+    return publicUrl;
+}
+
 
         // 1. 初始化圖示
         lucide.createIcons();
@@ -1398,6 +1438,13 @@ function setupRealtimeValidation() {
         input.addEventListener('blur', () => validateField(input));
         input.addEventListener('input', () => {
             if (input.value) input.classList.remove('input-error');
+                    if (input.inputMode === 'numeric') {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            });
+        }
+    });
+}
         });
 
         // === 新增：手機號碼自動加 "-" ===
@@ -1887,97 +1934,249 @@ function closeSignatureModal() {
             }
         }
 
-        // --- 送出邏輯 (買賣) ---
-        function submitContract() {
-            if (isSubmitting) return;
+// --- 送出邏輯 (買賣) ---
+async function submitContract() {
+    if (isSubmitting) return;
 
-            let errors = [];
-            document.querySelectorAll('#view-contract .required-field').forEach(el => {
-                if (!validateField(el) || !el.value) errors.push(el.placeholder || '必填欄位');
-            });
+    // === 1. 驗證邏輯 ===
+    let errors = [];
+    document.querySelectorAll('#view-contract .required-field').forEach(el => {
+        if (!validateField(el) || !el.value) errors.push(el.placeholder || '必填欄位');
+    });
+    const paymentStructure = document.querySelector('#view-contract input[name="paymentStructure"]:checked')?.value;
+    if (paymentStructure === 'deposit') {
+        const depositInput = document.getElementById('depositInput');
+        const balanceInput = document.getElementById('balanceInput');
+        
+        if (!depositInput.value || parseInt(depositInput.value) <= 0) {
+            errors.push('定金金額');
+            depositInput.classList.add('input-error', 'shake');
+        } else {
+            depositInput.classList.remove('input-error');
+        }
+        if (!balanceInput.value || parseInt(balanceInput.value) <= 0) {
+            errors.push('尾款金額');
+            balanceInput.classList.add('input-error', 'shake');
+        } else {
+            balanceInput.classList.remove('input-error');
+        }
+    }
+    if (!document.querySelector('#view-contract input[name="petSex"]:checked')) errors.push('寵物性別');
+    if (!document.querySelector('#view-contract input[name="paymentStructure"]:checked')) errors.push('付款模式');
+    if (document.querySelectorAll('#view-contract input[name="paymentMethod"]:checked').length === 0) errors.push('支付方式');
+    
+    if (document.getElementById('img-buyer').classList.contains('hidden')) errors.push('買方簽名');
+    if (!document.getElementById('contractAgree').checked) errors.push('契約同意');
 
-            if (!document.querySelector('#view-contract input[name="petSex"]:checked')) errors.push('寵物性別');
-            if (!document.querySelector('input[name="paymentStructure"]:checked')) errors.push('付款模式');
-            if (document.querySelectorAll('input[name="paymentMethod"]:checked').length === 0) errors.push('支付方式');
-            if (document.getElementById('img-buyer').classList.contains('hidden')) errors.push('買方簽名');
-            if (!document.getElementById('contractAgree').checked) errors.push('契約同意');
+    if (errors.length > 0) {
+        showToast('請完成所有必填欄位與簽名', 'error');
+        const firstError = document.querySelector('.input-error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
 
-            if (errors.length > 0) {
-                showToast('請完成所有必填欄位與簽名', 'error');
-                const firstError = document.querySelector('.input-error');
-                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-
+    // === 2. 送出邏輯 ===
     isSubmitting = true;
     const btn = event.currentTarget;
     const originalText = btn.innerHTML;
     
-    // === 新增：鎖定按鈕樣式 ===
     btn.disabled = true;
     btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
-    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
+    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 資料上傳中...`;
     lucide.createIcons();
-    setTimeout(() => {
+
+    try {
+        const buyerName = document.querySelector('#view-contract input[placeholder="請輸入真實姓名"]').value;
+        const buyerPhone = document.querySelector('#view-contract input[placeholder="09xx-xxx-xxx"]').value;
+        const buyerId = document.querySelector('#view-contract input[placeholder="請輸入身分證字號"]').value;
+        const buyerAddress = document.querySelector('#view-contract input[placeholder="請輸入完整地址"]').value;
+        const buyerBirth = document.querySelector('#view-contract input[type="date"]').value;
+
+        const petType = document.querySelector('#view-contract input[name="petType"]:checked')?.value || '貓';
+        const petSex = document.querySelector('#view-contract input[name="petSex"]:checked')?.value;
+        const petBreed = document.querySelector('#view-contract input[placeholder="例：英國短毛貓"]').value;
+        const petColor = document.querySelector('#view-contract input[placeholder="例：藍色"]').value;
+        const petBirth = document.querySelectorAll('#view-contract input[type="date"]')[1]?.value;
+
+        const paymentMethods = Array.from(document.querySelectorAll('#view-contract input[name="paymentMethod"]:checked'))
+                                    .map(el => el.value).join(',');
+        const totalPrice = document.getElementById('totalPrice').value || 0;
+
+        const signatureDataUrl = document.getElementById('img-buyer').src;
+        const signatureUrl = await uploadSignature('sales', buyerName, signatureDataUrl);
+
+        // ✅ 修正：使用 _supabase
+        const { error } = await _supabase
+            .from('sales_contracts')
+            .insert({
+                buyer_name: buyerName,
+                buyer_phone: buyerPhone,
+                buyer_id_number: buyerId,
+                buyer_address: buyerAddress,
+                buyer_birthday: buyerBirth,
+                pet_type: petType,
+                pet_sex: petSex,
+                pet_breed: petBreed,
+                pet_color: petColor,
+                pet_birthday: petBirth,
+                total_price: totalPrice,
+                payment_method: paymentMethods,
+                signature_url: signatureUrl,
+                contract_status: 'pending'
+            });
+
+        if (error) throw error;
+
         showToast('契約已成功送出！', 'success');
-        
-        // === 復原按鈕 (雖然會跳轉，但復原是好習慣) ===
+        setTimeout(() => router('home'), 1500);
+
+    } catch (err) {
+        console.error(err);
+        showToast('上傳失敗：' + err.message, 'error');
         btn.innerHTML = originalText;
         btn.disabled = false;
         btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
-        
+    } finally {
         isSubmitting = false;
-        setTimeout(() => router('home'), 1000);
-    }, 1500);
+    }
 }
 
-        // --- 送出邏輯 (美容) ---
-        function submitGrooming() {
-            if (isSubmitting) return;
-            let errors = [];
-            document.querySelectorAll('.required-grooming').forEach(el => {
-                if (!validateField(el) || !el.value) errors.push(el.placeholder);
-            });
-            
-            if (!document.querySelector('input[name="petSex"]:checked')) errors.push('寵物性別');
-            if (!document.querySelector('input[name="petNeuter"]:checked')) errors.push('結紮狀態');
-            if (!document.querySelector('input[name="petChip"]:checked')) errors.push('晶片資訊');
-            if (!document.querySelector('input[name="petHistory"]:checked')) errors.push('過往病史');
-            if (!document.querySelector('input[name="mainService"]:checked')) errors.push('服務項目');
-            if (!document.getElementById('manualPrice').value) errors.push('服務金額');
-            if (document.getElementById('img-owner').classList.contains('hidden')) errors.push('飼主簽名');
-            if (!document.getElementById('groomingAgree').checked) errors.push('契約同意');
 
-            if (errors.length > 0) {
-                showToast('請完成所有必填欄位與簽名', 'error');
-                const firstError = document.querySelector('.input-error');
-                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
+// --- 送出邏輯 (美容) ---
+async function submitGrooming() {
+    if (isSubmitting) return;
 
+    // === 1. 驗證邏輯 ===
+    let errors = [];
+    document.querySelectorAll('#view-grooming .required-grooming').forEach(el => {
+        const labelText = el.previousElementSibling?.innerText || '必填欄位';
+        if (!validateField(el) || !el.value) errors.push(el.placeholder || labelText.replace('*', '').trim());
+    });
+    
+    if (!document.querySelector('#view-grooming input[name="petSex"]:checked')) errors.push('寵物性別');
+    if (!document.querySelector('#view-grooming input[name="petNeuter"]:checked')) errors.push('結紮狀態');
+    if (!document.querySelector('#view-grooming input[name="pet_chip"]:checked')) errors.push('晶片資訊');
+    if (!document.querySelector('#view-grooming input[name="basePrice"]:checked')) errors.push('服務項目');
+    
+    if (document.getElementById('img-owner').classList.contains('hidden')) errors.push('飼主簽名');
+    if (!document.getElementById('groomingAgree').checked) errors.push('契約同意');
+
+    if (errors.length > 0) {
+        showToast('請完成：' + errors[0], 'error');
+        const firstError = document.querySelector('.input-error') || document.querySelector('#view-grooming');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // === 2. 送出邏輯 ===
     isSubmitting = true;
     const btn = event.currentTarget;
     const originalText = btn.innerHTML;
     
-    // === 新增：鎖定按鈕樣式 ===
+    // 鎖定按鈕
     btn.disabled = true;
     btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
-    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
+    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 資料上傳中...`;
     lucide.createIcons();
-    setTimeout(() => {
-        showToast('契約已成功送出！', 'success');
+
+    try {
+        // A. 抓取飼主資料
+        const ownerName = document.querySelector('#view-grooming input[placeholder="請輸入姓名"]').value;
+        const ownerPhone = document.querySelector('#view-grooming input[placeholder="09xx-xxx-xxx"]').value;
+        const ownerEmail = document.querySelector('#view-grooming input[placeholder="example@email.com"]').value;
+        const ownerId = document.querySelector('#view-grooming input[placeholder="請輸入身分證字號"]').value;
+        const ownerAddress = document.querySelector('#view-grooming input[placeholder="請輸入完整地址"]').value;
+        const emergName = document.querySelector('#view-grooming input[placeholder="姓名"]').value;
+        const emergPhone = document.querySelector('#view-grooming input[placeholder="電話"]').value;
+
+        // B. 抓取寵物資料
+        const petInputs = document.querySelectorAll('#view-grooming .grid-cols-2 .input-style');
+        const petName = petInputs[0]?.value || '';
+        const petBreed = petInputs[1]?.value || '';
+        const petWeight = petInputs[2]?.value || '';
+        const petAge = petInputs[3]?.value || '';
         
-        // === 復原按鈕 (雖然會跳轉，但復原是好習慣) ===
+        const petSex = document.querySelector('#view-grooming input[name="petSex"]:checked')?.value;
+        const petNeuter = document.querySelector('#view-grooming input[name="petNeuter"]:checked')?.value;
+
+        // 晶片邏輯
+        const chipStatus = document.querySelector('#view-grooming input[name="pet_chip"]:checked')?.value;
+        const chipNumber = document.querySelector('input[name="chip_number"]')?.value || '';
+        const finalChip = (chipStatus === 'has') ? `有 (${chipNumber})` : (chipStatus === 'unknown' ? '有(號碼不詳)' : '無');
+
+        // 病史邏輯
+        const hasHistory = document.querySelector('input[name="has_history"]:checked')?.value;
+        let historyNotes = '無';
+        if (hasHistory === 'yes') {
+            const checkedDiseases = Array.from(document.querySelectorAll('input[name="history_items[]"]:checked'))
+                                         .map(cb => cb.value);
+            const otherDetail = document.getElementById('other_detail_text').value;
+            if (otherDetail) checkedDiseases.push(`其他: ${otherDetail}`);
+            historyNotes = checkedDiseases.join(', ');
+        }
+
+        // C. 服務與金額
+        const baseServiceEl = document.querySelector('input[name="basePrice"]:checked');
+        const baseServiceText = baseServiceEl.closest('.price-radio').querySelector('span').innerText;
+        const basePriceVal = baseServiceEl.value;
+        
+        // 抓取加購項目
+        let serviceDetails = [`基礎: ${baseServiceText} ($${basePriceVal})`];
+        document.querySelectorAll('.calc-check:checked').forEach(el => {
+            const label = el.parentElement.innerText.trim();
+            serviceDetails.push(label);
+        });
+        
+        // 抓取總金額
+        const totalPrice = document.getElementById('finalDisplay').innerText;
+
+        // D. 上傳簽名
+        const signatureDataUrl = document.getElementById('img-owner').src;
+        const signatureUrl = await uploadSignature('grooming', ownerName, signatureDataUrl);
+
+        // E. 寫入資料庫 (✅ 使用 _supabase)
+        const { error } = await _supabase
+            .from('grooming_contracts')
+            .insert({
+                owner_name: ownerName,
+                owner_phone: ownerPhone,
+                owner_email: ownerEmail,
+                owner_id: ownerId,
+                owner_address: ownerAddress,
+                emergency_contact: emergName,
+                emergency_phone: emergPhone,
+                pet_name: petName,
+                pet_breed: petBreed,
+                pet_weight: petWeight,
+                pet_age: petAge,
+                pet_sex: petSex,
+                pet_neuter: petNeuter,
+                pet_chip: finalChip,
+                history_notes: historyNotes,
+                service_type: baseServiceText,
+                service_details: serviceDetails.join(', '),
+                total_price: totalPrice,
+                signature_url: signatureUrl,
+                contract_status: 'pending'
+            });
+
+        if (error) throw error;
+
+        showToast('美容契約已成功送出！', 'success');
+        setTimeout(() => router('home'), 1500);
+
+    } catch (err) {
+        console.error(err);
+        showToast('上傳失敗：' + err.message, 'error');
         btn.innerHTML = originalText;
         btn.disabled = false;
         btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
-        
+    } finally {
         isSubmitting = false;
-        setTimeout(() => router('home'), 1000);
-    }, 1500);
+    }
 }
-
-            // === 初始化 ===
+ 
+    // === 初始化 ===
             document.addEventListener('DOMContentLoaded', () => {
                 setupRealtimeValidation();
         });
