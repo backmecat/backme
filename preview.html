@@ -65,9 +65,6 @@
     <style>
 body { 
     background-color: #FFF8F0; 
-    /* 新增：紙張噪點質感 */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-    
     font-family: 'Noto Serif TC', serif;
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
@@ -473,7 +470,7 @@ body {
     </div>
     
     <div class="relative">
-        <div id="salesContractContainer" class="px-6 py-5 max-h-64 overflow-hidden relative transition-all duration-500 space-y-5 text-xs text-gray-600 leading-relaxed text-justify ">
+        <div id="salesContractContainer" class="px-6 py-5 max-h-64 overflow-hidden relative transition-all duration-500 space-y-5 text-xs text-gray-600 leading-relaxed text-justify">
             
             <div>
                 <strong class="text-brand-text block mb-1">第一條：買賣標的</strong>
@@ -1625,17 +1622,35 @@ function toggleSection(containerId, maskId, textId, iconId) {
 }
 
 
-        // --- 核心工具：調整畫布大小 ---
-        function resizeCanvas(canvas) {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            const width = canvas.offsetWidth || canvas.parentElement.clientWidth;
-            const height = canvas.offsetHeight || canvas.parentElement.clientHeight;
-            canvas.width = width * ratio;
-            canvas.height = height * ratio;
-            canvas.style.width = width + "px";
-            canvas.style.height = height + "px";
-            canvas.getContext("2d").scale(ratio, ratio);
-        }
+// 優化後的 Canvas 重設大小函式 (防止簽名遺失)
+function resizeCanvas(canvas) {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    
+    // 1. 備份當前內容 (如果有簽名板實例且非空)
+    let storedData = null;
+    if (signaturePad && !signaturePad.isEmpty()) {
+        storedData = signaturePad.toData();
+    }
+
+    // 2. 重設大小 (這會清空畫布)
+    const width = canvas.offsetWidth || canvas.parentElement.clientWidth;
+    const height = canvas.offsetHeight || canvas.parentElement.clientHeight;
+    
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    canvas.getContext("2d").scale(ratio, ratio);
+
+    // 3. 恢復內容 (如果原本有資料)
+    if (storedData) {
+        signaturePad.fromData(storedData);
+    } else if (signaturePad) {
+        // 如果原本是空的，確保清空狀態一致
+        signaturePad.clear();
+    }
+}
+
 
         // --- 路由切換 ---
 // 優化後的路由函式：支援手機實體返回鍵
@@ -1919,6 +1934,24 @@ function closeSignatureModal() {
                 setupRealtimeValidation();
         });
 
+// === 新增：觸覺回饋系統 (Haptic Feedback) ===
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. 定義震動函式 (輕微震動 10ms)
+    const triggerHaptic = () => {
+        if (navigator.vibrate) navigator.vibrate(10);
+    };
+
+    // 2. 綁定到所有按鈕、Radio、Checkbox
+    const interactiveElements = document.querySelectorAll('button, input[type="radio"], input[type="checkbox"], .option-card');
+    
+    interactiveElements.forEach(el => {
+        el.addEventListener('click', triggerHaptic);
+    });
+
+    // 3. 特別綁定計算機的輸入框 (點擊時也要震動)
+    const calcInput = document.getElementById('modal-final-input');
+    if(calcInput) calcInput.addEventListener('click', triggerHaptic);
+});
 
         window.addEventListener('resize', () => {
             const canvas = document.getElementById('signatureCanvas');
