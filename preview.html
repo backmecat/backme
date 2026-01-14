@@ -2,12 +2,20 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>貝可米努奶喵館 | 電子契約系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">    <title>貝可米努奶喵館 | 電子契約系統</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="logo.jpg">
-    
+
+     <!-- === 新增：PWA 偽裝設定 === -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFF8F0">
+    <meta name="format-detection" content="telephone=no">
+
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { 
@@ -81,6 +89,14 @@ body {
     
     /* 3. 確保圖層獨立渲染，提升滑動效能 */
     will-change: scroll-position; 
+}
+
+    @media screen and (max-height: 500px) {
+    /* 當鍵盤彈出導致高度變小時，隱藏底部懸浮按鈕，避免遮擋視線 */
+    #calculator-section, .fixed.bottom-0 {
+        position: static !important; /* 取消固定定位 */
+        margin-top: 20px;
+    }
 }
 
         /* iOS 100vh 修正 */
@@ -335,7 +351,8 @@ body {
 
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1">身分證字號 *</label>
-                    <input type="text" class="input-style required-field focus:ring-2 focus:ring-brand-purple/20" placeholder="請輸入身分證字號">
+                    <input type="text" class="input-style required-field focus:ring-2 focus:ring-brand-purple/20" placeholder="請輸入身分證字號"maxlength="10"
+       oninput="this.value = this.value.toUpperCase()">
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
@@ -657,7 +674,8 @@ body {
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1">身分證字號 *</label>
-                    <input type="text" class="input-style required-grooming focus:ring-2 focus:ring-brand-pink/20" placeholder="請輸入身分證字號">
+                    <input type="text" class="input-style required-grooming focus:ring-2 focus:ring-brand-pink/20" placeholder="請輸入身分證字號"       maxlength="10"
+       oninput="this.value = this.value.toUpperCase()">
                 </div>
 
                 <div class="space-y-2">
@@ -1374,14 +1392,28 @@ body {
             }
         }
 
-        function setupRealtimeValidation() {
-            document.querySelectorAll('.input-style').forEach(input => {
-                input.addEventListener('blur', () => validateField(input));
-                input.addEventListener('input', () => {
-                    if (input.value) input.classList.remove('input-error');
-                });
+function setupRealtimeValidation() {
+    document.querySelectorAll('.input-style').forEach(input => {
+        // 1. 原有的驗證邏輯
+        input.addEventListener('blur', () => validateField(input));
+        input.addEventListener('input', () => {
+            if (input.value) input.classList.remove('input-error');
+        });
+
+        // === 新增：手機號碼自動加 "-" ===
+        if (input.type === 'tel') {
+            input.addEventListener('input', (e) => {
+                // 移除非數字字元
+                let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,3})(\d{0,3})/);
+                // 重新組裝格式 (09xx-xxx-xxx)
+                if (x) {
+                    e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '');
+                }
             });
         }
+    });
+}
+
 
 // 全域變數
 let systemTotal = 0;      // 系統自動算的錢 (Checkbox/Radio)
@@ -1877,19 +1909,27 @@ function closeSignatureModal() {
                 return;
             }
 
-            isSubmitting = true;
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
-            lucide.createIcons();
-
-            setTimeout(() => {
-                showToast('契約已成功送出！', 'success');
-                btn.innerHTML = originalText;
-                isSubmitting = false;
-                setTimeout(() => router('home'), 1000);
-            }, 1500);
-        }
+    isSubmitting = true;
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    
+    // === 新增：鎖定按鈕樣式 ===
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
+    lucide.createIcons();
+    setTimeout(() => {
+        showToast('契約已成功送出！', 'success');
+        
+        // === 復原按鈕 (雖然會跳轉，但復原是好習慣) ===
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+        
+        isSubmitting = false;
+        setTimeout(() => router('home'), 1000);
+    }, 1500);
+}
 
         // --- 送出邏輯 (美容) ---
         function submitGrooming() {
@@ -1915,43 +1955,32 @@ function closeSignatureModal() {
                 return;
             }
 
-            isSubmitting = true;
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> 預約中...`;
-            lucide.createIcons();
-
-            setTimeout(() => {
-                showToast('預約已成功送出！', 'success');
-                btn.innerHTML = originalText;
-                isSubmitting = false;
-                setTimeout(() => router('home'), 1000);
-            }, 1500);
-        }
+    isSubmitting = true;
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    
+    // === 新增：鎖定按鈕樣式 ===
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
+    lucide.createIcons();
+    setTimeout(() => {
+        showToast('契約已成功送出！', 'success');
+        
+        // === 復原按鈕 (雖然會跳轉，但復原是好習慣) ===
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+        
+        isSubmitting = false;
+        setTimeout(() => router('home'), 1000);
+    }, 1500);
+}
 
             // === 初始化 ===
             document.addEventListener('DOMContentLoaded', () => {
                 setupRealtimeValidation();
         });
-
-// === 新增：觸覺回饋系統 (Haptic Feedback) ===
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. 定義震動函式 (輕微震動 10ms)
-    const triggerHaptic = () => {
-        if (navigator.vibrate) navigator.vibrate(10);
-    };
-
-    // 2. 綁定到所有按鈕、Radio、Checkbox
-    const interactiveElements = document.querySelectorAll('button, input[type="radio"], input[type="checkbox"], .option-card');
-    
-    interactiveElements.forEach(el => {
-        el.addEventListener('click', triggerHaptic);
-    });
-
-    // 3. 特別綁定計算機的輸入框 (點擊時也要震動)
-    const calcInput = document.getElementById('modal-final-input');
-    if(calcInput) calcInput.addEventListener('click', triggerHaptic);
-});
 
         window.addEventListener('resize', () => {
             const canvas = document.getElementById('signatureCanvas');
