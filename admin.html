@@ -80,6 +80,22 @@
     <script>
         lucide.createIcons();
         
+        // === 工具：將時間強制轉為台灣時間格式 ===
+function formatTaiwanTime(isoString) {
+    if (!isoString) return '無';
+    const date = new Date(isoString);
+    return date.toLocaleString('zh-TW', {
+        timeZone: 'Asia/Taipei', // 強制指定台灣時區
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false // 24小時制
+    });
+}
+
         // === 設定 Supabase ===
         const SUPABASE_URL = 'https://gevoefsyhnboricfepay.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdldm9lZnN5aG5ib3JpY2ZlcGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNzEzOTMsImV4cCI6MjA4Mzk0NzM5M30.hI6PhjEycYj5njOCCZVcBwa8VX5F5g-mD3qXxGeYJLo';
@@ -198,7 +214,7 @@
             container.innerHTML = data.map((item, index) => {
                 const name = type === 'sales' ? item.buyer_name : item.owner_name;
                 const subInfo = type === 'sales' ? item.pet_breed : item.service_type;
-                const date = new Date(item.created_at).toLocaleString('zh-TW', { hour12: false });
+                const date = formatTaiwanTime(item.created_at);
                 const badgeColor = type === 'sales' ? 'bg-[#6D7DBF]/10 text-[#6D7DBF]' : 'bg-[#E0899B]/10 text-[#E0899B]';
 
                 // 將 item 資料轉成 JSON 字串藏在按鈕裡，方便開啟詳情
@@ -248,8 +264,14 @@
             // 產生表單 HTML
             let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
             
-            schema.forEach(field => {
-                const value = currentItem[field.key] || '(未填寫)';
+schema.forEach(field => {
+    let value = currentItem[field.key];
+    // 如果是建立時間，強制轉台灣時區
+    if (field.key === 'created_at' && value) {
+        value = formatTaiwanTime(value);
+    } else {
+        value = value || '(未填寫)';
+    }
                 
                 // 特殊欄位處理
                 if (field.type === 'image') {
