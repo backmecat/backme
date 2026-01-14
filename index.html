@@ -2,12 +2,20 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>貝可米努奶喵館 | 電子契約系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">    <title>貝可米努奶喵館 | 電子契約系統</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="logo.jpg">
-    
+
+     <!-- === 新增：PWA 偽裝設定 === -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFF8F0">
+    <meta name="format-detection" content="telephone=no">
+
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { 
@@ -63,14 +71,34 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: #FFF8F0; 
-            font-family: 'Noto Serif TC', serif;
-            -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
-            touch-action: manipulation;
-        }
-        
+body { 
+    background-color: #FFF8F0; 
+    font-family: 'Noto Serif TC', serif;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    touch-action: manipulation;
+}
+
+        /* === 優化手機滾動體驗 === */
+.smooth-scroll-touch {
+    /* 1. 開啟 iOS 慣性滾動 (關鍵) */
+    -webkit-overflow-scrolling: touch; 
+    
+    /* 2. 防止滾動到底部時帶動整個網頁 (滾動鎖定) */
+    overscroll-behavior: contain;
+    
+    /* 3. 確保圖層獨立渲染，提升滑動效能 */
+    will-change: scroll-position; 
+}
+
+    @media screen and (max-height: 500px) {
+    /* 當鍵盤彈出導致高度變小時，隱藏底部懸浮按鈕，避免遮擋視線 */
+    #calculator-section, .fixed.bottom-0 {
+        position: static !important; /* 取消固定定位 */
+        margin-top: 20px;
+    }
+}
+
         /* iOS 100vh 修正 */
         html, body { height: -webkit-fill-available; }
         body.modal-open { overflow: hidden; position: fixed; width: 100%; }
@@ -86,20 +114,26 @@
             transition: all 0.3s ease;
         }
 
-        /* === 自訂輸入框 === */
-        .input-style {
-            width: 100%;
-            background-color: #FAF5F0;
-            border: 1px solid #EFE6DD;
-            border-radius: 0.85rem;
-            padding: 1rem 1.2rem;
-            outline: none;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            color: #5D5046;
-            font-family: 'Plus Jakarta Sans', 'Noto Serif TC', serif; /* 確保輸入框也用宋體 */
-            font-size: 1rem;
-            font-weight: 500;
-        }
+/* === 優化後的輸入框樣式 === */
+.input-style {
+    width: 100%;
+    background-color: #FAF5F0;
+    border: 1px solid #EFE6DD;
+    border-radius: 0.85rem;
+    padding: 1rem 1.2rem;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #5D5046;
+    font-family: 'Plus Jakarta Sans', 'Noto Serif TC', serif;
+    
+    /* 優化重點：防止 iOS 自動縮放 */
+    font-size: 16px; /* 強制 16px */
+    
+    /* 優化重點：移除 iOS 預設陰影與圓角 */
+    -webkit-appearance: none; 
+    appearance: none;
+}
+
         .input-style:focus {
             background-color: #ffffff;
             border-color: #D4B5A0;
@@ -317,7 +351,8 @@
 
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1">身分證字號 *</label>
-                    <input type="text" class="input-style required-field focus:ring-2 focus:ring-brand-purple/20" placeholder="請輸入身分證字號">
+                    <input type="text" class="input-style required-field focus:ring-2 focus:ring-brand-purple/20" placeholder="請輸入身分證字號"maxlength="10"
+       oninput="this.value = this.value.toUpperCase()">
                 </div>
 
                 <div class="md:col-span-2 space-y-2">
@@ -452,7 +487,7 @@
     </div>
     
     <div class="relative">
-        <div id="salesContractContainer" class="px-6 py-5 max-h-64 overflow-hidden relative transition-all duration-500 space-y-5 text-xs text-gray-600 leading-relaxed text-justify scroll-smooth">
+        <div id="salesContractContainer" class="px-6 py-5 max-h-64 overflow-hidden relative transition-all duration-500 space-y-5 text-xs text-gray-600 leading-relaxed text-justify">
             
             <div>
                 <strong class="text-brand-text block mb-1">第一條：買賣標的</strong>
@@ -639,7 +674,8 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1">身分證字號 *</label>
-                    <input type="text" class="input-style required-grooming focus:ring-2 focus:ring-brand-pink/20" placeholder="請輸入身分證字號">
+                    <input type="text" class="input-style required-grooming focus:ring-2 focus:ring-brand-pink/20" placeholder="請輸入身分證字號"       maxlength="10"
+       oninput="this.value = this.value.toUpperCase()">
                 </div>
 
                 <div class="space-y-2">
@@ -1085,7 +1121,7 @@
     </div>
     
     <div class="relative">
-        <div id="contractContainer" class="p-6 max-h-48 overflow-hidden relative transition-all duration-500 space-y-4 text-xs text-gray-500 leading-relaxed text-justify scroll-smooth">
+        <div id="contractContainer" class="p-6 max-h-48 overflow-hidden relative transition-all duration-500 space-y-4 text-xs text-gray-500 leading-relaxed text-justify">
             
             <div>
                 <h5 class="font-bold text-brand-text text-sm mb-1">第一條（契約目的與服務範圍）</h5>
@@ -1356,14 +1392,28 @@
             }
         }
 
-        function setupRealtimeValidation() {
-            document.querySelectorAll('.input-style').forEach(input => {
-                input.addEventListener('blur', () => validateField(input));
-                input.addEventListener('input', () => {
-                    if (input.value) input.classList.remove('input-error');
-                });
+function setupRealtimeValidation() {
+    document.querySelectorAll('.input-style').forEach(input => {
+        // 1. 原有的驗證邏輯
+        input.addEventListener('blur', () => validateField(input));
+        input.addEventListener('input', () => {
+            if (input.value) input.classList.remove('input-error');
+        });
+
+        // === 新增：手機號碼自動加 "-" ===
+        if (input.type === 'tel') {
+            input.addEventListener('input', (e) => {
+                // 移除非數字字元
+                let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,3})(\d{0,3})/);
+                // 重新組裝格式 (09xx-xxx-xxx)
+                if (x) {
+                    e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '');
+                }
             });
         }
+    });
+}
+
 
 // 全域變數
 let systemTotal = 0;      // 系統自動算的錢 (Checkbox/Radio)
@@ -1550,11 +1600,7 @@ function selectServiceType(type) {
 
 
 /**
- * 通用收合函式
- * @param {string} containerId - 內容容器的 ID
- * @param {string} maskId - 遮罩層的 ID
- * @param {string} textId - 按鈕文字 Span 的 ID
- * @param {string} iconId - 按鈕圖示 Icon 的 ID
+ * 通用收合函式 (優化版)
  */
 function toggleSection(containerId, maskId, textId, iconId) {
     const container = document.getElementById(containerId);
@@ -1562,81 +1608,150 @@ function toggleSection(containerId, maskId, textId, iconId) {
     const btnText = document.getElementById(textId);
     const btnIcon = document.getElementById(iconId);
     
-    // 檢查當前是否為收合狀態 (依據 overflow-hidden 判斷)
+    // 檢查當前是否為收合狀態
     const isCollapsed = container.classList.contains('overflow-hidden');
 
     if (isCollapsed) {
         // === 展開 === //
         
-        // 1. 移除收合高度限制，加入固定高度與卷軸
-        // 注意：這裡我們假設收合時有 max-h-48 或 max-h-64，展開統一變 h-96 (約384px)
+        // 移除限制高度與隱藏屬性
         container.classList.remove('max-h-48', 'max-h-64', 'overflow-hidden');
-        container.classList.add('h-96', 'overflow-y-auto', 'custom-scrollbar');
         
-        // 2. 移除遮罩漸層
+        // 新增樣式：
+        // 1. h-[60vh]: 拉大高度至螢幕 60%，閱讀更舒適
+        // 2. smooth-scroll-touch: 自定義 CSS，開啟慣性滾動
+        // 3. overscroll-contain: Tailwind 屬性，防止背景連動
+        container.classList.add('h-[60vh]', 'overflow-y-auto', 'custom-scrollbar', 'smooth-scroll-touch', 'overscroll-contain');
+        
+        // 移除遮罩
         mask.classList.remove('contract-mask-overlay');
         mask.classList.add('bg-transparent');
 
-        // 3. 修改按鈕 UI
+        // 修改按鈕 UI
         btnText.innerText = "收合條款";
         btnIcon.classList.add('rotate-180');
 
     } else {
         // === 收回 === //
         
-        // 1. 捲動回頂部
+        // 滾動回頂部
         container.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // 2. 恢復收合樣式
-        // 這裡我們加回 max-h-64 (如果不確定原本是 48 還是 64，可以寫 CSS 或都加上，Tailwind 會取順序)
-        // 為了簡單，我們統一加回 max-h-64 (對 48 的容器來說只是上限變大一點，不影響功能)
+        // 恢復收合樣式
         container.classList.add('max-h-64', 'overflow-hidden');
-        container.classList.remove('h-96', 'overflow-y-auto', 'custom-scrollbar');
         
-        // 3. 恢復遮罩
+        // 移除展開時的樣式
+        container.classList.remove('h-[60vh]', 'overflow-y-auto', 'custom-scrollbar', 'smooth-scroll-touch', 'overscroll-contain');
+        
+        // 恢復遮罩
         mask.classList.add('contract-mask-overlay');
         mask.classList.remove('bg-transparent');
         
-        // 4. 恢復按鈕 UI
+        // 恢復按鈕 UI
         btnText.innerText = "展開完整條款";
         btnIcon.classList.remove('rotate-180');
     }
 }
 
-        // --- 核心工具：調整畫布大小 ---
-        function resizeCanvas(canvas) {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            const width = canvas.offsetWidth || canvas.parentElement.clientWidth;
-            const height = canvas.offsetHeight || canvas.parentElement.clientHeight;
-            canvas.width = width * ratio;
-            canvas.height = height * ratio;
-            canvas.style.width = width + "px";
-            canvas.style.height = height + "px";
-            canvas.getContext("2d").scale(ratio, ratio);
-        }
+
+// 優化後的 Canvas 重設大小函式 (防止簽名遺失)
+function resizeCanvas(canvas) {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    
+    // 1. 備份當前內容 (如果有簽名板實例且非空)
+    let storedData = null;
+    if (signaturePad && !signaturePad.isEmpty()) {
+        storedData = signaturePad.toData();
+    }
+
+    // 2. 重設大小 (這會清空畫布)
+    const width = canvas.offsetWidth || canvas.parentElement.clientWidth;
+    const height = canvas.offsetHeight || canvas.parentElement.clientHeight;
+    
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    canvas.getContext("2d").scale(ratio, ratio);
+
+    // 3. 恢復內容 (如果原本有資料)
+    if (storedData) {
+        signaturePad.fromData(storedData);
+    } else if (signaturePad) {
+        // 如果原本是空的，確保清空狀態一致
+        signaturePad.clear();
+    }
+}
+
 
         // --- 路由切換 ---
-        function router(viewId) {
-            ['view-home', 'view-contract', 'view-grooming'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            
-            document.getElementById(`view-${viewId}`).classList.remove('hidden');
-            window.scrollTo(0, 0);
-
-            const backBtn = document.getElementById('backBtn');
-            const navbar = document.getElementById('navbar');
-            
-            if (viewId === 'home') {
-                backBtn.classList.add('hidden');
-                navbar.classList.add('py-3');
-                navbar.classList.remove('py-2');
-            } else {
-                backBtn.classList.remove('hidden');
-                navbar.classList.remove('py-3');
-                navbar.classList.add('py-2');
-            }
+// 優化後的路由函式：支援手機實體返回鍵
+function router(viewId) {
+    // 1. 如果不是透過 popstate 事件觸發（即主動點擊按鈕），則推入歷史紀錄
+    if (!event || event.type !== 'popstate') {
+        if (viewId === 'home') {
+            // 如果回首頁，清除多餘的歷史狀態 (選擇性，或單純 push)
+             history.pushState({ view: 'home' }, '', '#home');
+        } else {
+            history.pushState({ view: viewId }, '', `#${viewId}`);
         }
+    }
+
+    // 2. 切換視圖邏輯 (原本的代碼)
+    ['view-home', 'view-contract', 'view-grooming'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+    });
+    
+    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+    window.scrollTo(0, 0);
+
+    const backBtn = document.getElementById('backBtn');
+    const navbar = document.getElementById('navbar');
+    
+    if (viewId === 'home') {
+        backBtn.classList.add('hidden');
+        navbar.classList.add('py-3');
+        navbar.classList.remove('py-2');
+    } else {
+        backBtn.classList.remove('hidden');
+        navbar.classList.remove('py-3');
+        navbar.classList.add('py-2');
+    }
+}
+
+// 3. 監聽瀏覽器返回事件 (請將此段代碼放在 script 初始化的位置，例如 DOMContentLoaded 內)
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.view) {
+        // 傳入假事件物件避免重複 pushState
+        const mockEvent = { type: 'popstate' };
+        // 這裡需要稍微修改 router 函式接收 event 參數，或者直接呼叫內部切換邏輯
+        // 為了簡單整合，建議直接在此處手動切換 class，不呼叫 router 以免遞迴
+        
+        const viewId = event.state.view;
+        // 重複原本的切換邏輯...
+        ['view-home', 'view-contract', 'view-grooming'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(`view-${viewId}`).classList.remove('hidden');
+        
+        const backBtn = document.getElementById('backBtn');
+        const navbar = document.getElementById('navbar');
+        if (viewId === 'home') {
+            backBtn.classList.add('hidden');
+            navbar.classList.add('py-3');
+        } else {
+            backBtn.classList.remove('hidden');
+            navbar.classList.remove('py-3');
+        }
+    } else {
+        // 預設回首頁
+        document.getElementById('view-home').classList.remove('hidden');
+        document.getElementById('view-contract').classList.add('hidden');
+        document.getElementById('view-grooming').classList.add('hidden');
+        document.getElementById('backBtn').classList.add('hidden');
+    }
+});
+
 
         // --- 契約摺疊 ---
         function expandContract(containerId, maskId) {
@@ -1646,43 +1761,52 @@ function toggleSection(containerId, maskId, textId, iconId) {
             mask.style.display = 'none';
         }
 
-        // --- 簽名板邏輯 ---
-        function openSignatureModal(id) {
-            currentSigId = id;
-            const modal = document.getElementById('signatureModal');
-            const canvas = document.getElementById('signatureCanvas');
-            const navbar = document.getElementById('navbar'); 
-            
-            if (navbar) navbar.classList.add('hidden');
-            document.body.classList.add('modal-open');
-            modal.classList.remove('hidden');
-            
-            requestAnimationFrame(() => {
-                modal.classList.remove('opacity-0');
-                resizeCanvas(canvas);
-                if (!signaturePad) {
-                    signaturePad = new SignaturePad(canvas, {
-                        backgroundColor: 'rgba(255, 255, 255, 0)',
-                        penColor: '#5D5046', 
-                        minWidth: 1.5, maxWidth: 3.5
-                    });
-                } else {
-                    signaturePad.clear();
-                }
+// 優化後的簽名板開啟邏輯
+function openSignatureModal(id) {
+    currentSigId = id;
+    const modal = document.getElementById('signatureModal');
+    const canvas = document.getElementById('signatureCanvas');
+    const navbar = document.getElementById('navbar'); 
+    
+    if (navbar) navbar.classList.add('hidden');
+    
+    // 鎖定背景滾動
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+    
+    modal.classList.remove('hidden');
+    
+    requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        resizeCanvas(canvas);
+        if (!signaturePad) {
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: '#5D5046', 
+                minWidth: 1.5, maxWidth: 3.5
             });
+        } else {
+            signaturePad.clear();
         }
+    });
+}
 
-        function closeSignatureModal() {
-            const modal = document.getElementById('signatureModal');
-            const navbar = document.getElementById('navbar'); 
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                if(signaturePad) signaturePad.clear(); 
-                if (navbar) navbar.classList.remove('hidden');
-                document.body.classList.remove('modal-open');
-            }, 300);
-        }
+// 優化後的簽名板關閉邏輯
+function closeSignatureModal() {
+    const modal = document.getElementById('signatureModal');
+    const navbar = document.getElementById('navbar'); 
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        if(signaturePad) signaturePad.clear(); 
+        if (navbar) navbar.classList.remove('hidden');
+        
+        // 解除背景鎖定
+        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+    }, 300);
+}
+
 
         function clearCanvas() { if (signaturePad) signaturePad.clear(); }
 
@@ -1785,19 +1909,27 @@ function toggleSection(containerId, maskId, textId, iconId) {
                 return;
             }
 
-            isSubmitting = true;
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
-            lucide.createIcons();
-
-            setTimeout(() => {
-                showToast('契約已成功送出！', 'success');
-                btn.innerHTML = originalText;
-                isSubmitting = false;
-                setTimeout(() => router('home'), 1000);
-            }, 1500);
-        }
+    isSubmitting = true;
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    
+    // === 新增：鎖定按鈕樣式 ===
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
+    lucide.createIcons();
+    setTimeout(() => {
+        showToast('契約已成功送出！', 'success');
+        
+        // === 復原按鈕 (雖然會跳轉，但復原是好習慣) ===
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+        
+        isSubmitting = false;
+        setTimeout(() => router('home'), 1000);
+    }, 1500);
+}
 
         // --- 送出邏輯 (美容) ---
         function submitGrooming() {
@@ -1823,25 +1955,32 @@ function toggleSection(containerId, maskId, textId, iconId) {
                 return;
             }
 
-            isSubmitting = true;
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> 預約中...`;
-            lucide.createIcons();
-
-            setTimeout(() => {
-                showToast('預約已成功送出！', 'success');
-                btn.innerHTML = originalText;
-                isSubmitting = false;
-                setTimeout(() => router('home'), 1000);
-            }, 1500);
-        }
+    isSubmitting = true;
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    
+    // === 新增：鎖定按鈕樣式 ===
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> 處理中...`;
+    lucide.createIcons();
+    setTimeout(() => {
+        showToast('契約已成功送出！', 'success');
+        
+        // === 復原按鈕 (雖然會跳轉，但復原是好習慣) ===
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+        
+        isSubmitting = false;
+        setTimeout(() => router('home'), 1000);
+    }, 1500);
+}
 
             // === 初始化 ===
             document.addEventListener('DOMContentLoaded', () => {
                 setupRealtimeValidation();
         });
-
 
         window.addEventListener('resize', () => {
             const canvas = document.getElementById('signatureCanvas');
