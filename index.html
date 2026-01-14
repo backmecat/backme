@@ -2001,6 +2001,9 @@ async function submitContract() {
         const petBreed = document.querySelector('#view-contract input[placeholder="例：英國短毛貓"]').value;
         const petColor = document.querySelector('#view-contract input[placeholder="例：藍色"]').value;
         const petBirth = document.querySelectorAll('#view-contract input[type="date"]')[1]?.value;
+        const deliveryDate = document.querySelectorAll('#view-contract input[type="date"]')[2]?.value;
+        const depositAmount = document.getElementById('depositInput').value;
+        const balanceAmount = document.getElementById('balanceInput').value;
 
         const paymentMethods = Array.from(document.querySelectorAll('#view-contract input[name="paymentMethod"]:checked'))
                                     .map(el => el.value).join(',');
@@ -2023,6 +2026,9 @@ async function submitContract() {
                 pet_breed: petBreed,
                 pet_color: petColor,
                 pet_birthday: petBirth,
+                delivery_date: deliveryDate,
+                deposit_amount: depositAmount,
+                balance_amount: balanceAmount,
                 total_price: totalPrice,
                 payment_method: paymentMethods,
                 signature_url: signatureUrl,
