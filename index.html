@@ -1434,20 +1434,22 @@ async function uploadSignature(folder, name, dataUrl) {
 
 function setupRealtimeValidation() {
     document.querySelectorAll('.input-style').forEach(input => {
-        // 1. 原有的驗證邏輯
+        // 1. 失去焦點時驗證
         input.addEventListener('blur', () => validateField(input));
+
+        // 2. 輸入時移除錯誤紅框
         input.addEventListener('input', () => {
             if (input.value) input.classList.remove('input-error');
-                    if (input.inputMode === 'numeric') {
+        });
+
+        // 3. 純數字輸入限制 (修正邏輯：移出 input 事件外)
+        if (input.inputMode === 'numeric') {
             input.addEventListener('input', (e) => {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
             });
         }
-    });
-}
-        });
 
-        // === 新增：手機號碼自動加 "-" ===
+        // 4. 手機號碼自動加 "-" (修正邏輯：確保在 forEach 迴圈內)
         if (input.type === 'tel') {
             input.addEventListener('input', (e) => {
                 // 移除非數字字元
@@ -1460,6 +1462,8 @@ function setupRealtimeValidation() {
         }
     });
 }
+
+
 
 
 // 全域變數
