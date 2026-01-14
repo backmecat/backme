@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貝可米努 | 後台管理系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #FFF8F0; font-family: 'Noto Serif TC', serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); border: 1px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        /* 隱藏捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-[#5D5046]">
+
+    <!-- 登入畫面 -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass-card p-8 rounded-3xl w-full max-w-sm text-center space-y-6">
+            <h1 class="text-2xl font-black">管理員登入</h1>
+            <input type="email" id="email" placeholder="Email" class="w-full p-3 rounded-xl border bg-[#FAF5F0]">
+            <input type="password" id="password" placeholder="Password" class="w-full p-3 rounded-xl border bg-[#FAF5F0]">
+            <button onclick="handleLogin()" class="w-full py-3 bg-[#D4B5A0] text-white font-bold rounded-xl hover:bg-[#A89985]">登入</button>
+        </div>
+    </div>
+
+    <!-- 主控台畫面 -->
+    <div id="dashboard-view" class="hidden min-h-screen pb-20">
+        <nav class="bg-white/80 backdrop-blur-md p-4 sticky top-0 z-40 border-b border-[#D4B5A0]/20 flex justify-between items-center">
+            <span class="font-black text-lg">BACKME ADMIN</span>
+            <button onclick="handleLogout()" class="text-sm text-red-500 font-bold hover:bg-red-50 px-3 py-1 rounded-lg transition">登出</button>
+        </nav>
+
+        <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+            <!-- 分頁切換 -->
+            <div class="flex gap-4 sticky top-20 z-30 bg-[#FFF8F0]/90 p-2 -mx-2 backdrop-blur-sm rounded-2xl">
+                <button onclick="switchTab('sales')" id="tab-sales" class="flex-1 py-3 bg-white rounded-xl font-bold shadow-sm ring-2 ring-[#6D7DBF] text-[#6D7DBF]">寵物買賣</button>
+                <button onclick="switchTab('grooming')" id="tab-grooming" class="flex-1 py-3 bg-white/50 rounded-xl font-bold text-gray-400 hover:bg-white">美容服務</button>
+            </div>
+
+            <!-- 列表容器 -->
+            <div id="content-area" class="space-y-4">
+                <div class="text-center py-10 text-gray-400">載入中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳情/編輯 彈窗 -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300" id="modal-panel">
+            
+            <!-- Header -->
+            <div class="p-6 border-b flex justify-between items-center bg-[#FAF5F0] rounded-t-3xl">
+                <h2 class="text-xl font-black text-[#5D5046]" id="modal-title">合約詳情</h2>
+                <button onclick="closeModal()" class="p-2 hover:bg-gray-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="p-6 overflow-y-auto no-scrollbar flex-1 space-y-6" id="modal-content">
+                <!-- 內容由 JS 動態生成 -->
+            </div>
+
+            <!-- Footer / Actions -->
+            <div class="p-6 border-t bg-white rounded-b-3xl flex justify-between items-center gap-4">
+                <button onclick="deleteCurrentItem()" class="text-red-500 font-bold px-4 py-2 hover:bg-red-50 rounded-xl transition flex items-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> 刪除此單
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="enableEdit()" id="btn-edit" class="bg-gray-100 text-gray-600 px-6 py-2 rounded-xl font-bold hover:bg-gray-200 transition">編輯</button>
+                    <button onclick="saveChanges()" id="btn-save" class="hidden bg-[#D4B5A0] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#A89985] transition shadow-lg shadow-[#D4B5A0]/30">儲存變更</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // === 設定 Supabase ===
+        const SUPABASE_URL = 'https://gevoefsyhnboricfepay.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdldm9lZnN5aG5ib3JpY2ZlcGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNzEzOTMsImV4cCI6MjA4Mzk0NzM5M30.hI6PhjEycYj5njOCCZVcBwa8VX5F5g-mD3qXxGeYJLo';
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // === 欄位定義 (用於產生詳情表單) ===
+        const FIELD_SCHEMAS = {
+            sales: [
+                { key: 'buyer_name', label: '買方姓名' },
+                { key: 'buyer_phone', label: '買方電話' },
+                { key: 'buyer_id', label: '身分證字號' },
+                { key: 'buyer_address', label: '通訊地址' },
+                { key: 'pet_breed', label: '寵物品種' },
+                { key: 'pet_gender', label: '性別' },
+                { key: 'pet_color', label: '毛色' },
+                { key: 'pet_bday', label: '生日' },
+                { key: 'pet_chip', label: '晶片號碼' },
+                { key: 'pet_price', label: '交易金額' },
+                { key: 'deposit', label: '訂金' },
+                { key: 'balance', label: '尾款' },
+                { key: 'handover_date', label: '交貓日期' },
+                { key: 'created_at', label: '建立時間', readonly: true },
+                { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true }
+            ],
+            grooming: [
+                { key: 'owner_name', label: '飼主姓名' },
+                { key: 'owner_phone', label: '飼主電話' },
+                { key: 'owner_email', label: 'Email' },
+                { key: 'owner_address', label: '地址' },
+                { key: 'emergency_contact', label: '緊急聯絡人' },
+                { key: 'emergency_phone', label: '緊急電話' },
+                { key: 'pet_name', label: '寵物名字' },
+                { key: 'pet_breed', label: '品種' },
+                { key: 'pet_weight', label: '體重 (kg)' },
+                { key: 'pet_age', label: '年齡' },
+                { key: 'pet_sex', label: '性別' },
+                { key: 'pet_neuter', label: '絕育狀況' },
+                { key: 'history_notes', label: '病史/備註', type: 'textarea' },
+                { key: 'service_type', label: '服務項目' },
+                { key: 'total_price', label: '總金額' },
+                { key: 'created_at', label: '建立時間', readonly: true },
+                { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true }
+            ]
+        };
+
+        let currentTab = 'sales';
+        let currentItem = null; // 當前正在檢視的資料物件
+
+        // === 登入檢查 ===
+        async function checkSession() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                loadData('sales');
+            }
+        }
+        checkSession();
+
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            if (!email || !password) return alert('請輸入帳號密碼');
+            const { error } = await _supabase.auth.signInWithPassword({ email, password });
+            if (error) alert('登入失敗: ' + error.message);
+            else checkSession();
+        }
+
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            location.reload();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const salesBtn = document.getElementById('tab-sales');
+            const groomingBtn = document.getElementById('tab-grooming');
+            
+            const activeClass = "flex-1 py-3 bg-white rounded-xl font-bold shadow-sm ring-2 ring-[#6D7DBF] text-[#6D7DBF] transition-all";
+            const inactiveClass = "flex-1 py-3 bg-white/50 rounded-xl font-bold text-gray-400 hover:bg-white transition-all";
+
+            if (tab === 'sales') {
+                salesBtn.className = activeClass;
+                groomingBtn.className = inactiveClass;
+            } else {
+                salesBtn.className = inactiveClass;
+                groomingBtn.className = activeClass.replace('ring-[#6D7DBF] text-[#6D7DBF]', 'ring-[#E0899B] text-[#E0899B]');
+            }
+            loadData(tab);
+        }
+
+        // === 載入列表 ===
+        async function loadData(type) {
+            const container = document.getElementById('content-area');
+            container.innerHTML = '<div class="text-center py-10"><i data-lucide="loader" class="animate-spin mx-auto text-gray-400"></i></div>';
+            lucide.createIcons();
+
+            const table = type === 'sales' ? 'sales_contracts' : 'grooming_contracts';
+            
+            const { data, error } = await _supabase
+                .from(table)
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p class="text-red-500 text-center bg-red-50 p-4 rounded-xl">讀取錯誤：${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 py-10">目前沒有資料</p>';
+                return;
+            }
+
+            // 渲染卡片列表
+            container.innerHTML = data.map((item, index) => {
+                const name = type === 'sales' ? item.buyer_name : item.owner_name;
+                const subInfo = type === 'sales' ? item.pet_breed : item.service_type;
+                const date = new Date(item.created_at).toLocaleString('zh-TW', { hour12: false });
+                const badgeColor = type === 'sales' ? 'bg-[#6D7DBF]/10 text-[#6D7DBF]' : 'bg-[#E0899B]/10 text-[#E0899B]';
+
+                // 將 item 資料轉成 JSON 字串藏在按鈕裡，方便開啟詳情
+                const itemJson = encodeURIComponent(JSON.stringify(item));
+
+                return `
+                <div class="glass-card p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:scale-[1.01] transition-transform cursor-pointer group" onclick="openModal('${index}')">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-bold text-gray-400">${date}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeColor}">
+                                ${type === 'sales' ? '買賣' : '美容'}
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-black text-[#5D5046] group-hover:text-[#D4B5A0] transition-colors">
+                            ${name} 
+                            <span class="text-sm font-normal text-gray-500 ml-1">(${subInfo})</span>
+                        </h3>
+                        <p class="text-sm text-gray-500 font-bold mt-1">金額: $${item.total_price || item.pet_price || 0}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-bold text-gray-600 group-hover:bg-[#D4B5A0] group-hover:text-white transition-colors">
+                            查看詳情
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+            
+            // 暫存目前的資料列表，方便 modal 取用
+            window.currentDataList = data;
+            lucide.createIcons();
+        }
+
+        // === Modal 邏輯 ===
+        const modal = document.getElementById('detail-modal');
+        const modalPanel = document.getElementById('modal-panel');
+
+        function openModal(index) {
+            currentItem = window.currentDataList[index]; // 取得該筆資料
+            const schema = FIELD_SCHEMAS[currentTab];
+            const contentDiv = document.getElementById('modal-content');
+            
+            // 重置按鈕狀態
+            document.getElementById('btn-edit').classList.remove('hidden');
+            document.getElementById('btn-save').classList.add('hidden');
+            
+            // 產生表單 HTML
+            let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+            
+            schema.forEach(field => {
+                const value = currentItem[field.key] || '(未填寫)';
+                
+                // 特殊欄位處理
+                if (field.type === 'image') {
+                    html += `
+                        <div class="col-span-1 md:col-span-2 mt-4">
+                            <label class="block text-xs font-bold text-gray-400 mb-2">${field.label}</label>
+                            <div class="border-2 border-dashed border-gray-200 rounded-xl p-2 bg-gray-50">
+                                <img src="${value}" class="max-h-40 mx-auto object-contain" onerror="this.style.display='none'">
+                            </div>
+                        </div>`;
+                } else if (field.type === 'textarea') {
+                    html += `
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
+                            <textarea data-key="${field.key}" disabled class="editable-field w-full p-3 rounded-xl border bg-gray-50 text-gray-700 font-medium resize-none h-24 focus:bg-white focus:ring-2 ring-[#D4B5A0] outline-none transition-all">${value}</textarea>
+                        </div>`;
+                } else {
+                    const isReadOnly = field.readonly ? 'readonly-field' : 'editable-field';
+                    const bgClass = field.readonly ? 'bg-gray-100/50 text-gray-400' : 'bg-gray-50 text-gray-700';
+                    
+                    html += `
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
+                            <input type="text" data-key="${field.key}" value="${value}" disabled 
+                                class="${isReadOnly} ${bgClass} w-full p-3 rounded-xl border font-medium focus:bg-white focus:ring-2 ring-[#D4B5A0] outline-none transition-all">
+                        </div>`;
+                }
+            });
+            html += '</div>';
+            
+            contentDiv.innerHTML = html;
+
+            // 顯示 Modal 動畫
+            modal.classList.remove('hidden');
+            // 小延遲讓 CSS transition 生效
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalPanel.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalPanel.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 開啟編輯模式
+        function enableEdit() {
+            document.getElementById('btn-edit').classList.add('hidden');
+            document.getElementById('btn-save').classList.remove('hidden');
+            
+            // 啟用所有非唯讀的輸入框
+            document.querySelectorAll('.editable-field').forEach(input => {
+                input.disabled = false;
+                input.classList.remove('bg-gray-50');
+                input.classList.add('bg-white', 'border-[#D4B5A0]');
+            });
+        }
+
+        // 儲存變更
+        async function saveChanges() {
+            const updates = {};
+            // 收集所有可編輯欄位的值
+            document.querySelectorAll('.editable-field').forEach(input => {
+                const key = input.getAttribute('data-key');
+                updates[key] = input.value;
+            });
+
+            const table = currentTab === 'sales' ? 'sales_contracts' : 'grooming_contracts';
+            const btn = document.getElementById('btn-save');
+            const originalText = btn.innerText;
+            btn.innerText = '儲存中...';
+            btn.disabled = true;
+
+            const { error } = await _supabase
+                .from(table)
+                .update(updates)
+                .eq('id', currentItem.id);
+
+            if (error) {
+                alert('儲存失敗：' + error.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            } else {
+                alert('儲存成功！');
+                closeModal();
+                loadData(currentTab); // 重新載入列表
+            }
+        }
+
+        // 刪除資料
+        async function deleteCurrentItem() {
+            if (!confirm('⚠️ 確定要刪除這筆資料嗎？刪除後無法復原！')) return;
+
+            const table = currentTab === 'sales' ? 'sales_contracts' : 'grooming_contracts';
+            
+            const { error } = await _supabase
+                .from(table)
+                .delete()
+                .eq('id', currentItem.id);
+
+            if (error) {
+                alert('刪除失敗：' + error.message);
+            } else {
+                alert('已刪除');
+                closeModal();
+                loadData(currentTab);
+            }
+        }
+
+        // 點擊背景關閉 Modal
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+    </script>
+</body>
+</html>
