@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">    <title>貝可米努奶喵館 | 電子契約系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">    <title>貝可米努奶喵館</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2187,9 +2187,16 @@ async function submitGrooming() {
 }
  
     // === 初始化 ===
-            document.addEventListener('DOMContentLoaded', () => {
-                setupRealtimeValidation();
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    setupRealtimeValidation();
+    calculateTotal();
+    lucide.createIcons();
+    // ✅ 新增：讀取網址 hash 來決定要顯示哪一頁
+    const hash = window.location.hash.replace('#', '');
+    if (hash && ['contract', 'grooming'].includes(hash)) {
+        router(hash);
+    }
+});
 
         window.addEventListener('resize', () => {
             const canvas = document.getElementById('signatureCanvas');
