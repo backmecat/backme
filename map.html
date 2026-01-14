@@ -24,18 +24,12 @@
                             input: '#FAF5F0'     // 輸入框底色
                         }
                     },
-fontFamily: {
-    'f1': ['"Zen Maru Gothic"', 'sans-serif'],
-    'f2': ['"Kiwi Maru"', 'serif'],
-    'f3': ['"Yusei Magic"', 'sans-serif'],
-    'f4': ['"Varela Round"', '"Noto Sans TC"', 'sans-serif'],
-    'f5': ['"Noto Sans TC"', 'sans-serif'],
-    'f6': ['"Noto Serif TC"', 'serif'],
-    'f7': ['"Zhi+Mang+Xing"', 'cursive'],
-    'f8': ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'sans-serif'],
-},
-
-animation: {
+                    fontFamily: {
+                        sans: ['"Noto Serif TC"', 'serif'],
+                        serif: ['"Noto Serif TC"', 'serif'],
+                        mono: ['"Plus Jakarta Sans"', 'monospace'], 
+                    },
+                    animation: {
                         float: 'float 6s ease-in-out infinite',
                         'fade-in': 'fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards',
                         'slide-up': 'slideUp 0.5s ease-out forwards',
@@ -67,207 +61,159 @@ animation: {
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&family=Kiwi+Maru:wght@300;400;500&family=Yusei+Magic&family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700&family=Varela+Round&family=Zhi+Mang+Xing&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
-<style>
-    body { 
-        background-color: #FFF8F0; 
-        -webkit-tap-highlight-color: transparent;
-        overflow-x: hidden;
-        touch-action: manipulation;
-        transition: font-family 0.4s ease;
-    }
-    
-    /* 設定不同狀態下的全站字體 */
-    body.font-f1 { font-family: 'Zen Maru Gothic', sans-serif; }
-    body.font-f2 { font-family: 'Kiwi Maru', serif; }
-    body.font-f3 { font-family: 'Yusei Magic', sans-serif; }
-    body.font-f4 { font-family: 'Varela Round', 'Noto Sans TC', sans-serif; }
-    body.font-f5 { font-family: 'Noto Sans TC', sans-serif; }
-    body.font-f6 { font-family: 'Noto Serif TC', serif; }
-    body.font-f7 { font-family: 'Zhi+Mang+Xing', cursive; }
-    body.font-f8 { font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif; }
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #FFF8F0; 
+            font-family: 'Noto Serif TC', serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+        
+        /* iOS 100vh 修正 */
+        html, body { height: -webkit-fill-available; }
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 
-    /* === 配色主題定義 === */
-    body.theme-milktea { background-color: #FFF8F0; }
-    body.theme-pink { background-color: #FFF5F7; }
-    body.theme-pink .glass-card { background: rgba(255, 245, 247, 0.85); }
-    body.theme-blue { background-color: #F0F4F8; }
-    body.theme-blue .glass-card { background: rgba(240, 244, 248, 0.85); }
+        /* === 玻璃擬態卡片 === */
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.9); 
+            border-radius: 1.5rem; 
+            box-shadow: 0 10px 40px -10px rgba(168, 153, 133, 0.15);
+            transition: all 0.3s ease;
+        }
 
-    /* 切換面板樣式 (通用) */
-    .switch-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        align-items: center;
-    }
+        /* === 自訂輸入框 === */
+        .input-style {
+            width: 100%;
+            background-color: #FAF5F0;
+            border: 1px solid #EFE6DD;
+            border-radius: 0.85rem;
+            padding: 1rem 1.2rem;
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #5D5046;
+            font-family: 'Plus Jakarta Sans', 'Noto Serif TC', serif; /* 確保輸入框也用宋體 */
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .input-style:focus {
+            background-color: #ffffff;
+            border-color: #D4B5A0;
+            box-shadow: 0 0 0 4px rgba(212, 181, 160, 0.15);
+            transform: translateY(-1px);
+        }
 
-    .font-switch-panel {
-        display: flex;
-        background: rgba(212, 181, 160, 0.15);
-        padding: 4px;
-        border-radius: 999px;
-        gap: 2px;
-        border: 1px solid rgba(212, 181, 160, 0.2);
-    }
-    .font-btn {
-        padding: 8px 12px; /* 加大按鈕觸控區 */
-        border-radius: 999px;
-        font-size: 12px;   /* 字體稍大 */
-        font-weight: 800;
-        color: #A89985;
-        transition: all 0.3s;
-        white-space: nowrap;
-    }
-    .font-btn.active {
-        background: white;
-        color: #5D5046;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+        input[type="radio"], input[type="checkbox"] {
+            accent-color: #D4B5A0;
+            width: 1.4rem;
+            height: 1.4rem;
+            cursor: pointer;
+        }
 
-    /* iOS 100vh 修正 */
-    html, body { height: -webkit-fill-available; }
-    body.modal-open { overflow: hidden; position: fixed; width: 100%; }
+        /* === 選項卡片互動 === */
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            min-height: 56px;
+        }
+        .option-card:active { transform: scale(0.97); }
+        
+        .option-card:has(input:checked) {
+            background-color: #fff;
+            border-color: currentColor;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transform: translateY(-1px);
+        }
+        
+        /* === Toast 通知樣式 === */
+        .toast-container {
+            position: fixed; top: 5rem; left: 50%; transform: translateX(-50%);
+            z-index: 10000; pointer-events: none; display: flex; flex-direction: column;
+            gap: 0.5rem; max-width: 90%; width: 400px;
+        }
+        .toast {
+            background: white; border-radius: 1rem; padding: 1rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(93, 80, 70, 0.15);
+            display: flex; align-items: center; gap: 0.75rem;
+            pointer-events: auto; transform: translateY(-20px); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 1px solid #EFE6DD;
+            position: relative;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+        
+        .toast.error { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
+        .toast.success { background: #F0FDF4; border-color: #BBF7D0; color: #16A34A; }
+        .toast.warning { background: #FFFBEB; border-color: #FDE68A; color: #D97706; }
+        .toast.info { background: #EFF6FF; border-color: #BFDBFE; color: #2563EB; }
+        
+        .toast-message { font-size: 0.875rem; font-weight: 600; flex: 1; color: #5D5046; }
+        
+        .toast-close {
+            position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+            width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border-radius: 0.25rem; transition: all 0.2s; color: #A89985;
+        }
 
-    /* === 玻璃擬態卡片 === */
-    .glass-card { 
-        background: rgba(255, 255, 255, 0.85); 
-        backdrop-filter: blur(16px); 
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.9); 
-        border-radius: 1.5rem; 
-        box-shadow: 0 10px 40px -10px rgba(168, 153, 133, 0.15);
-        transition: all 0.3s ease;
-    }
+        /* === 驗證與其他樣式 === */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .shake { animation: shake 0.4s; }
+        .input-error { border-color: #EF4444 !important; background-color: #FEF2F2 !important; }
+        .input-success { border-color: #10B981 !important; background-color: #F0FDF4 !important; }
 
-    /* === 自訂輸入框 === */
-    .input-style {
-        width: 100%;
-        background-color: #FAF5F0;
-        border: 1px solid #EFE6DD;
-        border-radius: 0.85rem;
-        padding: 1rem 1.2rem; /* 加大輸入框高度 */
-        outline: none;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        color: #5D5046;
-        font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
-        font-size: 1rem; /* 字體加大 */
-        font-weight: 500;
-    }
-    .input-style:focus {
-        background-color: #ffffff;
-        border-color: #D4B5A0;
-        box-shadow: 0 0 0 4px rgba(212, 181, 160, 0.15);
-        transform: translateY(-1px);
-    }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4B5A0; border-radius: 10px; }
 
-    input[type="radio"], input[type="checkbox"] {
-        accent-color: #D4B5A0;
-        width: 1.4rem; /* 加大原生選項框 */
-        height: 1.4rem;
-        cursor: pointer;
-    }
+        .canvas-container canvas { width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+        .pb-safe { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        .pt-safe { padding-top: max(4.5rem, env(safe-area-inset-top)); }
+        .active-bounce:active { transform: scale(0.96); }
 
-    /* === 選項卡片互動 === */
-    .option-card {
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        min-height: 56px; /* 增加最小高度，方便點擊 */
-    }
-    .option-card:active { transform: scale(0.97); }
-    
-    .option-card:has(input:checked) {
-        background-color: #fff;
-        border-color: currentColor;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        transform: translateY(-1px);
-    }
-    
-    /* === Toast 通知樣式 === */
-    .toast-container {
-        position: fixed; top: 5rem; left: 50%; transform: translateX(-50%);
-        z-index: 10000; pointer-events: none; display: flex; flex-direction: column;
-        gap: 0.5rem; max-width: 90%; width: 400px;
-    }
-    .toast {
-        background: white; border-radius: 1rem; padding: 1rem 1.5rem;
-        box-shadow: 0 10px 30px rgba(93, 80, 70, 0.15);
-        display: flex; align-items: center; gap: 0.75rem;
-        pointer-events: auto; transform: translateY(-20px); opacity: 0;
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        border: 1px solid #EFE6DD;
-        position: relative;
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast-icon { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
-    
-    .toast.error { background: #FEF2F2; border-color: #FECACA; color: #DC2626; }
-    .toast.success { background: #F0FDF4; border-color: #BBF7D0; color: #16A34A; }
-    .toast.warning { background: #FFFBEB; border-color: #FDE68A; color: #D97706; }
-    .toast.info { background: #EFF6FF; border-color: #BFDBFE; color: #2563EB; }
-    
-    .toast-message { font-size: 0.875rem; font-weight: 600; flex: 1; color: #5D5046; }
-    
-    .toast-close {
-        position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
-        width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center;
-        cursor: pointer; border-radius: 0.25rem; transition: all 0.2s; color: #A89985;
-    }
+        /* === 病症標籤優化 === */
+        .disease-tag span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.85rem 0.5rem;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.85rem;
+            color: #6b7280;
+            font-size: 0.95rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .disease-tag:hover span {
+            background-color: #fff1f2;
+            border-color: #fbcfe8;
+            color: #db2777;
+        }
 
-    /* === 驗證與其他樣式 === */
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-        20%, 40%, 60%, 80% { transform: translateX(4px); }
-    }
-    .shake { animation: shake 0.4s; }
-    .input-error { border-color: #EF4444 !important; background-color: #FEF2F2 !important; }
-    .input-success { border-color: #10B981 !important; background-color: #F0FDF4 !important; }
-
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4B5A0; border-radius: 10px; }
-
-    .canvas-container canvas { width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
-    .pb-safe { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
-    .pt-safe { padding-top: max(4.5rem, env(safe-area-inset-top)); }
-    .active-bounce:active { transform: scale(0.96); }
-
-    /* === 病症標籤優化 === */
-    .disease-tag span {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        padding: 0.85rem 0.5rem; /* 加大高度 */
-        background-color: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.85rem;
-        color: #6b7280;
-        font-size: 0.95rem; /* 字體加大 */
-        font-weight: 700;
-        transition: all 0.2s;
-        cursor: pointer;
-        user-select: none;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    
-    .disease-tag:hover span {
-        background-color: #fff1f2;
-        border-color: #fbcfe8;
-        color: #db2777;
-    }
-
-    .disease-tag input:checked + span {
-        background-color: #db2777;
-        border-color: #db2777;
-        color: white;
-        box-shadow: 0 4px 10px rgba(219, 39, 119, 0.4);
-        transform: translateY(-2px);
-    }
-</style>
-
+        .disease-tag input:checked + span {
+            background-color: #db2777;
+            border-color: #db2777;
+            color: white;
+            box-shadow: 0 4px 10px rgba(219, 39, 119, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
+
 
 <body class="text-brand-text antialiased min-h-screen pb-24 selection:bg-brand-main/20 bg-brand-bg relative font-cute">
 
@@ -280,45 +226,11 @@ animation: {
         <span class="text-brand-text">BACKME</span>
     </div>
 
-    <div class="flex flex-col items-end gap-2">
-        <div class="font-switch-panel grid grid-cols-4 gap-1 scale-90 md:scale-100 origin-right overflow-x-auto max-w-[200px] no-scrollbar">
-            <button onclick="changeFont('f1', this)" class="font-btn active">日圓</button>
-            <button onclick="changeFont('f2', this)" class="font-btn">奇圓</button>
-            <button onclick="changeFont('f3', this)" class="font-btn">童趣</button>
-            <button onclick="changeFont('f4', this)" class="font-btn">經典</button>
-            <button onclick="changeFont('f5', this)" class="font-btn">黑體</button>
-            <button onclick="changeFont('f6', this)" class="font-btn">宋體</button>
-            <button onclick="changeFont('f7', this)" class="font-btn">手寫</button>
-            <button onclick="changeFont('f8', this)" class="font-btn">原版</button>
-        </div>
-
-        <div class="flex gap-4 px-2"> <button onclick="changeTheme('milktea', this)" class="w-6 h-6 rounded-full bg-[#D4B5A0] border-2 border-white shadow-sm ring-2 ring-[#D4B5A0] transition-transform active:scale-90"></button>
-            <button onclick="changeTheme('pink', this)" class="w-6 h-6 rounded-full bg-[#E0899B] border-2 border-white shadow-sm transition-transform active:scale-90"></button>
-            <button onclick="changeTheme('blue', this)" class="w-6 h-6 rounded-full bg-[#6D7DBF] border-2 border-white shadow-sm transition-transform active:scale-90"></button>
-        </div>
-    </div>
-
-    <button id="backBtn" onclick="router('home')" class="hidden absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-brand-dark/80 uppercase tracking-widest flex items-center gap-1 bg-white/80 px-4 py-2 rounded-full border border-brand-main/20 shadow-sm active:scale-95 transition-transform">
+    <button id="backBtn" onclick="router('home')" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-brand-dark/80 uppercase tracking-widest flex items-center gap-1 bg-white/80 px-4 py-2 rounded-full border border-brand-main/20 shadow-sm active:scale-95 transition-transform">
         <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        <span>返回</span>
     </button>
 </nav>
-
-
-    <div class="flex flex-col items-end gap-2">
-        <div class="font-switch-panel scale-75 md:scale-90">
-            <button onclick="changeFont('cute', this)" class="font-btn active">圓潤</button>
-            <button onclick="changeFont('playful', this)" class="font-btn">童趣</button>
-            <button onclick="changeFont('hand', this)" class="font-btn">手寫</button>
-        </div>
-        
-        <div class="flex gap-3 px-2">
-            <button onclick="changeTheme('milktea', this)" class="w-5 h-5 rounded-full bg-[#D4B5A0] border-2 border-white shadow-sm ring-2 ring-[#D4B5A0]"></button>
-            <button onclick="changeTheme('pink', this)" class="w-5 h-5 rounded-full bg-[#E0899B] border-2 border-white shadow-sm"></button>
-            <button onclick="changeTheme('blue', this)" class="w-5 h-5 rounded-full bg-[#6D7DBF] border-2 border-white shadow-sm"></button>
-        </div>
-    </div>
-</nav>
-
 
 
 <main id="app" class="relative z-10 pt-28 px-4 md:px-6 max-w-3xl mx-auto space-y-6">
@@ -367,10 +279,15 @@ animation: {
             </button>
         </div>
         
-        <div class="mt-12 text-center text-brand-dark/50 text-xs font-medium space-y-1.5 pb-safe">
-            <p>台中市西屯區福星路324-1號1樓</p>
-            <p class="font-bold">0988-733-384 | 0906-831-591</p>
-        </div>
+<div class="mt-12 text-center text-brand-dark/50 text-xs font-medium space-y-1.5 pb-safe">
+    <a href="https://maps.app.goo.gl/aqWA6KTdztkhDLPQ8?g_st=ipc" 
+       target="_blank" 
+       class="inline-flex items-center gap-1 hover:text-brand-pink hover:underline transition-all duration-300">
+       <i data-lucide="map-pin" class="w-3 h-3"></i>
+       台中市西屯區福星路324-1號1樓
+    </a>
+    <p class="font-bold">0988-733-384 | 0906-831-591</p>
+</div>
     </div>
 
     <div id="view-contract" class="hidden space-y-6 pb-24 animate-fade-in">
@@ -644,10 +561,15 @@ animation: {
                         <span class="text-gray-400 text-[10px] block mb-1 uppercase tracking-wider">聯絡電話</span>
                         <div class="flex flex-col"><span class="font-bold text-brand-text">0988-733-384</span><span class="font-bold text-brand-text">0906-831-591</span></div>
                     </div>
-                    <div class="md:col-span-2">
-                        <span class="text-gray-400 text-[10px] block mb-1 uppercase tracking-wider">營業地址</span>
-                        <span class="font-bold text-brand-text">台中市西屯區福星路324-1號1樓</span>
-                    </div>
+<div class="md:col-span-2">
+    <span class="text-gray-400 text-[10px] block mb-1 uppercase tracking-wider">營業地址</span>
+    <a href="https://maps.app.goo.gl/aqWA6KTdztkhDLPQ8?g_st=ipc" 
+       target="_blank"
+       class="font-bold text-brand-text hover:text-brand-purple transition-colors flex items-center gap-1 group">
+        台中市西屯區福星路324-1號1樓
+        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-purple/50 group-hover:text-brand-purple group-hover:scale-110 transition-all"></i>
+    </a>
+    </div>
                     <div class="w-full h-px bg-brand-purple/10 md:col-span-2 my-1"></div>
                     <div class="md:col-span-2">
                         <span class="text-gray-400 text-[10px] block mb-1 uppercase tracking-wider">許可證字號</span>
@@ -1309,14 +1231,14 @@ animation: {
                     </div>
 
                     <!-- 營業地址 -->
-                    <div class="md:col-span-2">
-                        <span class="text-gray-400 text-[10px] block mb-1 uppercase tracking-wider">營業地址</span>
-                        <div class="flex items-start gap-1">
-                            <span class="font-bold text-brand-text">台中市西屯區福星路324-1號1樓</span>
-                            <a href="https://maps.google.com/?q=台中市西屯區福星路324-1號1樓" target="_blank" class="text-brand-pink hover:scale-110 transition-transform">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 mt-0.5"></i>
-                            </a>
-                        </div>
+<div class="md:col-span-2">
+    <span class="text-gray-400 text-[10px] block mb-1 uppercase tracking-wider">營業地址</span>
+    <a href="https://maps.app.goo.gl/aqWA6KTdztkhDLPQ8?g_st=ipc" 
+       target="_blank"
+       class="font-bold text-brand-text hover:text-brand-pink transition-colors flex items-center gap-1 group">
+        台中市西屯區福星路324-1號1樓
+        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-pink/50 group-hover:text-brand-pink group-hover:scale-110 transition-all"></i>
+    </a>
                     </div>
 
                     <!-- 分隔線 -->
@@ -1371,42 +1293,6 @@ animation: {
     </div>
 
     <script>
-
-// === 1. 背景主題切換 ===
-        function changeTheme(themeName, btn) {
-            // 徹底移除所有主題類別
-            document.body.classList.remove('theme-milktea', 'theme-pink', 'theme-blue');
-            // 加入新主題
-            document.body.classList.add('theme-' + themeName);
-            
-            // 更新按鈕選中樣式
-            const buttons = btn.parentElement.querySelectorAll('button');
-            buttons.forEach(b => b.classList.remove('ring-2', 'ring-offset-1'));
-            btn.classList.add('ring-2', 'ring-offset-1');
-
-            showToast(`風格已更換`, 'success');
-        }
-
-// 字體切換系統 - 修正版 (防止點擊多次失效)
-function changeFont(style, btn) {
-    // A. 定義所有 8 個可能的字體類別
-    const allFontClasses = ['font-f1', 'font-f2', 'font-f3', 'font-f4', 'font-f5', 'font-f6', 'font-f7', 'font-f8', 'font-cute', 'font-playful', 'font-hand', 'font-sans'];
-    
-    // B. 徹底從 body 移除所有字體類別 (這步最重要，解決堆疊問題)
-    document.body.classList.remove(...allFontClasses);
-    
-    // C. 加入目前點選的類別
-    document.body.classList.add('font-' + style);
-    
-    // D. 更新按鈕選中樣式
-    document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    
-    showToast(`字體已切換：${btn.innerText}`, 'info');
-    
-    // E. 刷新 Lucide 圖示 (防止圖示位移)
-    lucide.createIcons();
-}
 
         // 1. 初始化圖示
         lucide.createIcons();
