@@ -7,6 +7,7 @@
   "background_color": "#FFF8F0",
   "theme_color": "#5D5046",
   "orientation": "portrait-primary",
+  "scope": "/backme/admin.html",
   "icons": [
     {
       "src": "/backme/logo.jpg",
@@ -30,6 +31,5 @@
   "categories": ["business", "productivity"],
   "lang": "zh-TW",
   "dir": "ltr",
-  "scope": "/backme/",
   "prefer_related_applications": false
 }
