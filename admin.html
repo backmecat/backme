@@ -123,6 +123,7 @@ function formatTaiwanTime(isoString) {
             grooming: [
                 { key: 'owner_name', label: '飼主姓名' },
                 { key: 'owner_phone', label: '飼主電話' },
+                { key: 'owner_id', label: '身分證字號' }, // << 新增
                 { key: 'owner_email', label: 'Email' },
                 { key: 'owner_address', label: '地址' },
                 { key: 'emergency_contact', label: '緊急聯絡人' },
@@ -132,13 +133,16 @@ function formatTaiwanTime(isoString) {
                 { key: 'pet_weight', label: '體重 (kg)' },
                 { key: 'pet_age', label: '年齡' },
                 { key: 'pet_sex', label: '性別' },
-                { key: 'pet_neuter', label: '絕育狀況' },
+                { key: 'pet_neuter', label: '結紮狀況' }, // 原本叫 "絕育"
+                { key: 'pet_chip', label: '晶片資訊' }, // << 新增
+                { key: 'preferred_clinic', label: '指定醫院' }, // << 新增
                 { key: 'history_notes', label: '病史/備註', type: 'textarea' },
                 { key: 'service_type', label: '服務項目' },
                 { key: 'total_price', label: '總金額' },
                 { key: 'created_at', label: '建立時間', readonly: true },
                 { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true }
             ]
+
         };
 
         let currentTab = 'sales';

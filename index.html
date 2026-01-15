@@ -665,10 +665,15 @@ body {
                     <input type="text" class="input-style required-grooming focus:ring-2 focus:ring-brand-pink/20" placeholder="請輸入姓名">
                 </div>
                 
-                <div class="space-y-2">
-                    <label class="text-sm font-bold text-gray-500 block ml-1">電話 *</label>
-                    <input type="tel" class="input-style required-grooming focus:ring-2 focus:ring-brand-pink/20" placeholder="09xx-xxx-xxx">
-                </div>
+<div class="space-y-2">
+    <label class="text-sm font-bold text-gray-500 block ml-1">電話 *</label>
+    <div class="flex gap-2">
+        <input type="tel" id="searchPhone" class="input-style required-grooming focus:ring-2 focus:ring-brand-pink/20" placeholder="09xx-xxx-xxx">
+        <button type="button" onclick="searchOldGuest()" class="whitespace-nowrap px-4 py-2 bg-brand-pink text-white rounded-xl font-bold text-sm shadow-md hover:bg-brand-pink/90 active:scale-95 transition-all flex items-center gap-1">
+            <i data-lucide="search" class="w-4 h-4"></i> 舊客
+        </button>
+    </div>
+</div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-gray-500 block ml-1">電子郵件 *</label>
@@ -717,11 +722,11 @@ body {
                         <label class="text-sm font-bold text-gray-500 mb-2 block ml-1">性別 *</label>
                         <div class="flex gap-3 text-brand-pink">
                             <label class="flex-1 text-center cursor-pointer group active:scale-95 transition-transform">
-                                <input type="radio" name="petSex" value="M" class="peer hidden">
+                                <input type="radio" name="petSex" value="公" class="peer hidden">
                                 <div class="py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-500 peer-checked:bg-blue-50 peer-checked:text-blue-500 peer-checked:border-blue-200 peer-checked:shadow-sm transition-all peer-checked:ring-1 peer-checked:ring-blue-100">公</div>
                             </label>
                             <label class="flex-1 text-center cursor-pointer group active:scale-95 transition-transform">
-                                <input type="radio" name="petSex" value="F" class="peer hidden">
+                                <input type="radio" name="petSex" value="母" class="peer hidden">
                                 <div class="py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-500 peer-checked:bg-pink-50 peer-checked:text-pink-500 peer-checked:border-pink-200 peer-checked:shadow-sm transition-all peer-checked:ring-1 peer-checked:ring-pink-100">母</div>
                             </label>
                         </div>
@@ -785,7 +790,7 @@ body {
             </div>
 
             <div class="space-y-2">
-                <label class="text-sm font-bold text-gray-400 block ml-1">指定醫院</label>
+                <label class="text-sm font-bold text-gray-400 block ml-1">指定就醫診療機構</label>
                 <input type="text" class="input-style focus:ring-2 focus:ring-brand-pink/20" placeholder="若未填寫，則送往特約醫院">
             </div>
 
@@ -2090,14 +2095,17 @@ async function submitGrooming() {
     lucide.createIcons();
 
     try {
-        // A. 抓取飼主資料
-        const ownerName = document.querySelector('#view-grooming input[placeholder="請輸入姓名"]').value;
-        const ownerPhone = document.querySelector('#view-grooming input[placeholder="09xx-xxx-xxx"]').value;
-        const ownerEmail = document.querySelector('#view-grooming input[placeholder="example@email.com"]').value;
-        const ownerId = document.querySelector('#view-grooming input[placeholder="請輸入身分證字號"]').value;
-        const ownerAddress = document.querySelector('#view-grooming input[placeholder="請輸入完整地址"]').value;
-        const emergName = document.querySelector('#view-grooming input[placeholder="姓名"]').value;
-        const emergPhone = document.querySelector('#view-grooming input[placeholder="電話"]').value;
+// A. 抓取飼主資料 (修正緊急聯絡人抓取方式)
+const allTextInputs = document.querySelectorAll('#view-grooming .input-style[type="text"]');
+const allTelInputs = document.querySelectorAll('#view-grooming .input-style[type="tel"]');
+const ownerName = document.querySelector('#view-grooming input[placeholder="請輸入姓名"]').value;
+const ownerPhone = allTelInputs[0]?.value || ''; // 第一個電話是飼主的
+const ownerEmail = document.querySelector('#view-grooming input[placeholder="example@email.com"]').value;
+const ownerId = document.querySelector('#view-grooming input[placeholder="請輸入身分證字號"]').value;
+const ownerAddress = document.querySelector('#view-grooming input[placeholder="請輸入完整地址"]').value;
+const emergName = allTextInputs[allTextInputs.length - 2]?.value || ''; // 倒數第二個 text input
+const emergPhone = allTelInputs[allTelInputs.length - 1]?.value || ''; // 最後一個 tel input
+
 
         // B. 抓取寵物資料
         const petInputs = document.querySelectorAll('#view-grooming .grid-cols-2 .input-style');
@@ -2144,31 +2152,38 @@ async function submitGrooming() {
         const signatureDataUrl = document.getElementById('img-owner').src;
         const signatureUrl = await uploadSignature('grooming', ownerName, signatureDataUrl);
 
-        // E. 寫入資料庫 (✅ 使用 _supabase)
+        // ===== 請用這段程式碼替換上面那段 =====
+
+        // 新增：抓取「指定醫院」的欄位值
+        const preferredClinic = document.querySelector('#view-grooming input[placeholder="若未填寫，則送往特約醫院"]')?.value || '未指定';
+
+        // E. 寫入資料庫 (✅ 修正版，欄位更完整)
         const { error } = await _supabase
             .from('grooming_contracts')
             .insert({
                 owner_name: ownerName,
                 owner_phone: ownerPhone,
                 owner_email: ownerEmail,
-                owner_id: ownerId,
+                owner_id: ownerId, // 身分證字號
                 owner_address: ownerAddress,
-                emergency_contact: emergName,
-                emergency_phone: emergPhone,
+                emergency_contact: emergName, // 緊急聯絡人
+                emergency_phone: emergPhone,  // 緊急電話
                 pet_name: petName,
                 pet_breed: petBreed,
                 pet_weight: petWeight,
                 pet_age: petAge,
-                pet_sex: petSex,
-                pet_neuter: petNeuter,
-                pet_chip: finalChip,
+                pet_sex: petSex, 
+                pet_neuter: petNeuter, // 結紮狀況
+                pet_chip: finalChip,   // 晶片資訊
                 history_notes: historyNotes,
                 service_type: baseServiceText,
                 service_details: serviceDetails.join(', '),
                 total_price: totalPrice,
                 signature_url: signatureUrl,
-                contract_status: 'pending'
+                contract_status: 'pending',
+                preferred_clinic: preferredClinic // << 新增指定醫院欄位
             });
+
 
         if (error) throw error;
 
@@ -2206,6 +2221,241 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('touchmove', (e) => {
             if (document.body.classList.contains('modal-open')) e.preventDefault();
         }, { passive: false });
+        
+// --- 舊客帶入功能 ---
+
+// --- 舊客帶入功能 (安全版) ---
+
+// 1. 搜尋舊客資料
+async function searchOldGuest() {
+    const phoneInput = document.getElementById('searchPhone');
+    // 移除連字號與空白，確保傳送純數字
+    const phone = phoneInput.value.replace(/[-\s]/g, '').trim();
+
+    // 安全檢查：前端先擋一次，必須輸入完整 10 碼 (09xx...)
+    if (!phone || phone.length < 10) {
+        showToast('為確保個資安全，請輸入完整手機號碼', 'warning');
+        return;
+    }
+
+    const btn = event.currentTarget;
+    const originalContent = btn.innerHTML;
+    // 轉圈圈特效
+    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i>`;
+    btn.disabled = true;
+    lucide.createIcons();
+
+    try {
+        // === 關鍵修改：呼叫 Supabase 安全函式 ===
+        const { data, error } = await _supabase
+            .rpc('search_grooming_history', { phone_input: phone });
+
+        if (error) throw error;
+
+if (!data || data.length === 0) {
+    showToast('找不到此電話的過往紀錄', 'info');
+} else {
+    renderHistoryList(data);
+    const modal = document.getElementById('historyModal');
+    modal.style.display = 'flex'; // <-- 新的
+    showToast(`找到 ${data.length} 隻毛孩的紀錄`, 'success');
+}
+
+    } catch (err) {
+        console.error('搜尋失敗:', err);
+        showToast('搜尋發生錯誤，請稍後再試', 'error');
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+        lucide.createIcons();
+    }
+}
+
+// 2. 渲染搜尋結果列表 (顯示每隻寵物的最新紀錄)
+function renderHistoryList(records) {
+    const list = document.getElementById('historyList');
+    list.innerHTML = '';
+
+    records.forEach(record => {
+        // 格式化日期：2026/1/10
+        const dateObj = new Date(record.created_at);
+        const dateStr = `${dateObj.getFullYear()}/${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+        
+        const item = document.createElement('div');
+        item.className = 'p-4 rounded-xl border border-gray-200 bg-gray-50 hover:border-brand-pink hover:bg-brand-pink/5 hover:shadow-md cursor-pointer transition-all group flex items-center justify-between';
+        
+        // 點擊後帶入資料
+        item.onclick = () => fillFormData(record);
+
+        // 依照您的需求設計顯示格式： A-1 (上次美容時間 2026/1/10)
+        item.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-brand-pink/10 flex items-center justify-center text-brand-pink">
+                    <i data-lucide="cat" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="font-bold text-gray-700 text-base">
+                        ${record.pet_name}
+                        <span class="text-xs text-gray-400 font-normal ml-1 bg-white px-2 py-0.5 rounded-full border border-gray-100">
+                            ${record.pet_breed || '未知品種'}
+                        </span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">
+                        上次美容：<span class="font-medium text-brand-pink">${dateStr}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-brand-pink opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">
+                <i data-lucide="arrow-right-circle" class="w-5 h-5"></i>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+    lucide.createIcons();
+}
+
+// 3. 關閉視窗 (維持原樣)
+function closeHistoryModal() {
+    document.getElementById('historyModal').style.display = 'none'; // <-- 新的
+}
+
+
+// 4. 核心：將資料填入表單 (功能完整版)
+function fillFormData(data) {
+    try {
+        // --- 飼主資料 ---
+        setInputValue('#view-grooming input[placeholder="請輸入姓名"]', data.owner_name);
+        setInputValue('#view-grooming input[placeholder="example@email.com"]', data.owner_email);
+        setInputValue('#view-grooming input[placeholder="請輸入身分證字號"]', data.owner_id);
+        setInputValue('#view-grooming input[placeholder="請輸入完整地址"]', data.owner_address);
+        
+        // 精準定位緊急聯絡人欄位
+        const emergencyInputs = document.querySelectorAll('#view-grooming input[placeholder="姓名"], #view-grooming input[placeholder="電話"]');
+        if (emergencyInputs.length >= 4) { // 確保頁面上有足夠的輸入框
+            setInputValue(emergencyInputs[2], data.emergency_contact); // 緊急聯絡人姓名
+            setInputValue(emergencyInputs[3], data.emergency_phone);  // 緊急聯絡人電話
+        }
+
+        // --- 寵物資料 ---
+        const petSection = findSectionByTitle('貓咪詳細資料');
+        if (petSection) {
+            const petInputs = petSection.querySelectorAll('input[type="text"], input[type="number"]');
+            if(petInputs[0]) petInputs[0].value = data.pet_name || '';
+            if(petInputs[1]) petInputs[1].value = data.pet_breed || '';
+            if(petInputs[2]) petInputs[2].value = data.pet_weight || '';
+            if(petInputs[3]) petInputs[3].value = data.pet_age || '';
+            
+            // 指定醫院
+            const clinicInput = petSection.querySelector('input[placeholder="若未填寫，則送往特約醫院"]');
+            setInputValue(clinicInput, data.preferred_clinic); // 假設資料庫有這個欄位
+        }
+
+        // --- Radio Button 欄位 ---
+        setRadioValue('petSex', data.pet_sex);
+        setRadioValue('petNeuter', data.pet_neuter);
+
+        // --- 晶片 (複雜邏輯) ---
+        if (data.pet_chip) {
+            const chipBlock = document.getElementById('chip_input_block');
+            const chipNumberInput = document.querySelector('input[name="chip_number"]');
+            
+            if (data.pet_chip.includes('無')) {
+                setRadioValue('pet_chip', 'none');
+                if (chipBlock) chipBlock.classList.add('hidden');
+            } else if (data.pet_chip.includes('不詳')) {
+                setRadioValue('pet_chip', 'unknown');
+                if (chipBlock) chipBlock.classList.add('hidden');
+            } else { // 包含 "有"
+                setRadioValue('pet_chip', 'has');
+                if (chipBlock) chipBlock.classList.remove('hidden');
+                const match = data.pet_chip.match(/\((.*?)\)/); // 提取括號內的號碼
+                if (match && chipNumberInput) {
+                    chipNumberInput.value = match[1];
+                }
+            }
+        }
+
+        // --- 過往病史 (最複雜的邏輯) ---
+        const historyNotes = data.history_notes;
+        if (!historyNotes || historyNotes.trim() === '無' || historyNotes.trim() === '') {
+            // 情況一：沒有病史
+            setRadioValue('has_history', 'no');
+            toggleHistorySection(false); // 確保病史區塊是關閉的
+        } else {
+            // 情況二：有病史
+            setRadioValue('has_history', 'yes');
+            toggleHistorySection(true); // 打開病史區塊
+
+            const diseases = historyNotes.split(', ');
+            
+            // 勾選對應的 checkbox
+            document.querySelectorAll('input[name="history_items[]"]').forEach(checkbox => {
+                checkbox.checked = diseases.includes(checkbox.value);
+            });
+            
+            // 處理 "其他" 項目
+            const otherDisease = diseases.find(d => d.startsWith('其他:'));
+            if (otherDisease) {
+                const otherCheckbox = document.getElementById('chk_other');
+                const otherInput = document.getElementById('other_detail_text');
+                
+                otherCheckbox.checked = true;
+                toggleOtherInput(otherCheckbox); // 顯示輸入框
+                
+                // 填入 "其他" 的內容
+                otherInput.value = otherDisease.substring('其他: '.length);
+            }
+        }
+
+        // --- 成功執行後的 UI 回饋 (現在可以正確執行了) ---
+        closeHistoryModal();
+        showToast(`已成功帶入 ${data.pet_name} 的資料！`, 'success');
+
+    } catch (error) {
+        console.error("帶入資料時發生錯誤:", error);
+        showToast("帶入資料失敗，請檢查主控台錯誤", "error");
+    }
+}
+
+
+// 輔助函式：設定 Input 值 (更安全)
+function setInputValue(selectorOrElement, value) {
+    const el = (typeof selectorOrElement === 'string') ? document.querySelector(selectorOrElement) : selectorOrElement;
+    if (el && value !== null && typeof value !== 'undefined') {
+        el.value = value;
+        el.classList.remove('input-error'); // 順便移除錯誤樣式
+    }
+}
+
+// 輔助函式：設定 Radio Button 的值
+function setRadioValue(name, value) {
+    if (value === null || typeof value === 'undefined') return;
+    // 有些舊資料可能是 Y/N，新的是 公/母，這裡做個轉換
+    let finalValue = value;
+    if (name === 'petNeuter') {
+        if (value === '是') finalValue = 'Y';
+        if (value === '否') finalValue = 'N';
+    }
+    
+    const el = document.querySelector(`#view-grooming input[name="${name}"][value="${finalValue}"]`);
+    if (el) {
+        el.checked = true;
+    }
+}
+
+// 輔助函式：透過標題文字找到對應的 <section>
+function findSectionByTitle(titleText) {
+    const allSections = document.querySelectorAll('#view-grooming > section');
+    for (let section of allSections) {
+        const title = section.querySelector('h3');
+        if (title && title.innerText.includes(titleText)) {
+            return section;
+        }
+    }
+    return null; // 找不到就回傳 null
+}
+
+        
     </script>
 
 <div id="calc-modal" class="fixed inset-0 z-50 hidden">
@@ -2250,6 +2500,34 @@ document.addEventListener('DOMContentLoaded', () => {
         <button onclick="closeCalculator()" class="w-full py-5 bg-brand-pink text-white rounded-2xl font-black shadow-lg shadow-brand-pink/30 active:scale-95 transition-transform text-xl tracking-wider">
             確認金額
         </button>
+    </div>
+</div>
+
+    
+
+<!-- 舊客資料選擇 Modal (置中修正版) -->
+<div id="historyModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="display: none;">
+    <!-- 背景遮罩 -->
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeHistoryModal()"></div>
+    
+    <!-- 內容卡片 -->
+    <div class="relative bg-white rounded-[2rem] p-6 shadow-2xl animate-slide-up w-full max-w-md pb-safe max-h-[85vh] flex flex-col">
+        
+        <div class="flex justify-between items-center mb-4 flex-shrink-0">
+            <h3 class="text-lg font-black text-gray-700 flex items-center gap-2">
+                <i data-lucide="history" class="w-5 h-5 text-brand-pink"></i> 選擇過往紀錄
+            </h3>
+            <button onclick="closeHistoryModal()" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500"></i>
+            </button>
+        </div>
+
+        <p class="text-xs text-gray-400 mb-4 flex-shrink-0">點擊下方紀錄以自動帶入資料：</p>
+
+        <!-- 列表容器 -->
+        <div id="historyList" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 p-1">
+            <!-- JS 會自動產生內容塞在這裡 -->
+        </div>
     </div>
 </div>
 
