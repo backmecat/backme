@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <!-- PWA 配置 -->
-    <link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/backme/manifest.json">
     <link rel="icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="logo.jpg">
     <link rel="apple-touch-icon" sizes="152x152" href="logo.jpg">
@@ -22,15 +22,16 @@
     <title>貝可米努 | 後台管理系統</title>
     
     <!-- PWA Service Worker 注册 -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('✅ PWA 已启用:', reg.scope))
-                    .catch(err => console.log('❌ PWA 注册失败:', err));
-            });
-        }
-    </script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/backme/service-worker.js')
+                .then(reg => console.log('✅ PWA 已启用:', reg.scope))
+                .catch(err => console.log('❌ PWA 注册失败:', err));
+        });
+    }
+</script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -367,7 +368,7 @@ const FIELD_SCHEMAS = {
         { key: 'pet_name', label: '寵物名字' }, 
         { key: 'pet_breed', label: '品種' }, 
         { key: 'pet_weight', label: '體重 (kg)', inputType: 'number' }, 
-        { key: 'pet_age', label: '年齡', inputType: 'number' }, 
+    { key: 'pet_age', label: '年齡', type: 'age_display' }, 
         { key: 'pet_sex', label: '性別' }, 
         { key: 'pet_neuter', label: '結紮狀況' }, 
         { key: 'pet_chip', label: '晶片資訊' }, 
@@ -661,21 +662,33 @@ function filterData() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
     if (!window.fullDataList) return;
 
+    // ✅ 新增：移除搜尋詞中的所有非數字字元（針對電話搜尋）
+    const cleanedSearchTerm = searchTerm.replace(/\D/g, '');
+
     const filteredData = window.fullDataList.filter(item => {
         if (currentTab === 'sales') {
             const buyerName = (item.buyer_name || '').toLowerCase();
-            const buyerPhone = (item.buyer_phone || '').toLowerCase();
+            const buyerPhone = (item.buyer_phone || '').replace(/\D/g, ''); // ✅ 移除 -
             const petBreed = (item.pet_breed || '').toLowerCase();
-            return buyerName.includes(searchTerm) || buyerPhone.includes(searchTerm) || petBreed.includes(searchTerm);
+            
+            // ✅ 修正：電話比對時使用純數字
+            return buyerName.includes(searchTerm) || 
+                   buyerPhone.includes(cleanedSearchTerm) || 
+                   petBreed.includes(searchTerm);
         } else { 
             const ownerName = (item.owner_name || '').toLowerCase();
-            const ownerPhone = (item.owner_phone || '').toLowerCase();
+            const ownerPhone = (item.owner_phone || '').replace(/\D/g, ''); // ✅ 移除 -
             const petName = (item.pet_name || '').toLowerCase();
-            return ownerName.includes(searchTerm) || ownerPhone.includes(searchTerm) || petName.includes(searchTerm);
+            
+            // ✅ 修正：電話比對時使用純數字
+            return ownerName.includes(searchTerm) || 
+                   ownerPhone.includes(cleanedSearchTerm) || 
+                   petName.includes(searchTerm);
         }
     });
     renderDataList(filteredData);
 }
+
 
 const modal = document.getElementById('detail-modal');
 const modalPanel = document.getElementById('modal-panel');
@@ -698,7 +711,18 @@ function openModal(index) {
         if (field.type === 'payment' && value) {
             value = formatPaymentMethod(value);
         }
-        
+            // ✅ [新增] 年齡顯示邏輯
+    if (field.type === 'age_display') {
+        const rawData = currentItem.raw_data || currentItem;
+        if (rawData.is_under_one && rawData.age_months) {
+            value = `${rawData.age_months} 個月（未滿一歲）`;
+        } else if (rawData.age) {
+            value = `${rawData.age} 歲`;
+        } else {
+            value = '(未填寫)';
+        }
+    }
+    
         if (value === null || typeof value === 'undefined' || value === '') value = '(未填寫)';
 
         if (field.type === 'image') { 

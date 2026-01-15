@@ -1,10 +1,12 @@
-const CACHE_NAME = 'backmecat-v1';
+const CACHE_NAME = 'backmecat-v1.1'; // ✅ 版本號升級，強制更新
+const BASE_PATH = '/backme'; // ✅ 新增：基礎路徑
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/admin.html',
-  '/logo.jpg',
-  '/menu.jpg',
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/admin.html`,
+  `${BASE_PATH}/logo.jpg`,
+  `${BASE_PATH}/menu.jpg`,
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
   'https://unpkg.com/lucide@latest',
@@ -45,20 +47,16 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // 如果快取中有，直接返回快取
         if (response) {
           return response;
         }
         
-        // 否則發起網路請求
         return fetch(event.request).then(
           response => {
-            // 檢查是否為有效回應
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
-            // 複製回應並存入快取
             const responseToCache = response.clone();
             caches.open(CACHE_NAME)
               .then(cache => {
@@ -68,31 +66,28 @@ self.addEventListener('fetch', event => {
             return response;
           }
         ).catch(() => {
-          // 如果網路請求失敗，返回離線頁面
+          // ✅ 修正：離線時返回正確路徑
           if (event.request.destination === 'document') {
-            return caches.match('/index.html');
+            return caches.match(`${BASE_PATH}/index.html`);
           }
         });
       })
   );
 });
 
-// 背景同步功能（可選）
 self.addEventListener('sync', event => {
   if (event.tag === 'sync-data') {
     event.waitUntil(
-      // 在這裡執行同步邏輯
       console.log('🔄 執行背景同步')
     );
   }
 });
 
-// 推送通知功能（可選）
 self.addEventListener('push', event => {
   const options = {
     body: event.data ? event.data.text() : '您有新通知',
-    icon: '/logo.jpg',
-    badge: '/logo.jpg',
+    icon: `${BASE_PATH}/logo.jpg`,
+    badge: `${BASE_PATH}/logo.jpg`,
     vibrate: [100, 50, 100]
   };
 
