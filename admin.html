@@ -2,28 +2,73 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFF8F0">
+
     <title>貝可米努 | 後台管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { background-color: #FFF8F0; font-family: 'Noto Serif TC', serif; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); border: 1px solid white; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        body { 
+            background-color: #FFF8F0; 
+            font-family: 'Noto Serif TC', serif; 
+            overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .safe-area-padding {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.9); 
+            border: 1px solid white; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+        }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .skeleton-card {
+            background-color: #f3f4f6;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
     </style>
 </head>
-<body class="text-[#5D5046]">
+<body class="text-[#5D5046] antialiased min-h-screen safe-area-padding">
 
-    <!-- ✅ 1. 新增 Toast 容器 -->
-    <div id="toast-container" class="fixed top-5 right-1/2 translate-x-1/2 z-[100] space-y-2 w-full max-w-xs sm:max-w-md px-4"></div>
+    <!-- Toast 容器 -->
+    <div id="toast-container" class="fixed top-5 left-0 right-0 z-[100] flex flex-col items-center space-y-2 pointer-events-none px-4 pt-[env(safe-area-inset-top)]"></div>
 
-    <!-- 登入畫面 (全新設計) -->
+    <!-- 登入畫面 -->
     <div id="login-view" class="min-h-screen flex items-center justify-center p-4 bg-[#F7F2EC]">
         <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center space-y-8 shadow-xl shadow-[#D4B5A0]/10 border border-white">
-            
             <div class="mx-auto w-24 h-24 rounded-full bg-white p-1.5 shadow-md border-2 border-[#FFF8F0] -mt-20">
                 <img src="logo.jpg" alt="Logo" class="w-full h-full object-cover rounded-full">
             </div>
@@ -35,10 +80,11 @@
 
             <div class="relative">
                 <i data-lucide="lock" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="password" id="password" placeholder="輸入密碼" class="w-full p-4 pl-12 rounded-xl border bg-[#FAF5F0] focus:ring-2 focus:ring-[#D4B5A0] outline-none text-base transition-all">
+                <input type="password" id="password" placeholder="輸入密碼" 
+                       class="w-full p-4 pl-12 rounded-xl border bg-[#FAF5F0] focus:ring-2 focus:ring-[#D4B5A0] outline-none text-base transition-all appearance-none">
             </div>
 
-            <button onclick="handleLogin()" class="w-full py-4 bg-[#5D5046] text-white font-bold rounded-xl hover:bg-[#4a4038] transition-all active:scale-95 flex items-center justify-center gap-2 text-base">
+            <button onclick="handleLogin(event)" class="w-full py-4 bg-[#5D5046] text-white font-bold rounded-xl hover:bg-[#4a4038] transition-all active:scale-95 flex items-center justify-center gap-2 text-base shadow-lg shadow-[#5D5046]/20">
                 登入系統 <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </button>
 
@@ -52,122 +98,183 @@
     </div>
 
     <!-- 主控台畫面 -->
-    <div id="dashboard-view" class="hidden min-h-screen pb-20">
-        <nav class="bg-white/80 backdrop-blur-md p-4 sticky top-0 z-40 border-b border-[#D4B5A0]/20 flex justify-between items-center">
-            <span class="font-black text-lg">BACKME ADMIN</span>
-            <button onclick="handleLogout()" class="text-sm text-red-500 font-bold hover:bg-red-50 px-3 py-1 rounded-lg transition">登出</button>
+    <div id="dashboard-view" class="hidden min-h-screen pb-24">
+        
+        <!-- 頂部導航列 -->
+        <nav class="bg-white/80 backdrop-blur-md p-4 sticky top-0 z-40 border-b border-[#D4B5A0]/20 flex justify-between items-center pt-[calc(1rem+env(safe-area-inset-top))]">
+            <span class="font-black text-lg tracking-wide">BACKME ADMIN</span>
+            <div class="flex items-center gap-2">
+                <!-- ✨ 新增修改密碼按鈕 -->
+                <button onclick="openChangePasswordModal()" class="text-sm text-[#5D5046] font-bold hover:bg-[#FFF8F0] px-3 py-2 rounded-lg transition active:scale-95 flex items-center gap-1">
+                    <i data-lucide="key" class="w-4 h-4"></i> 修改密碼
+                </button>
+                <button onclick="handleLogout()" class="text-sm text-red-500 font-bold hover:bg-red-50 px-3 py-2 rounded-lg transition active:scale-95 flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> 登出
+                </button>
+            </div>
         </nav>
-        <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-            <div class="flex gap-4 sticky top-20 z-30 bg-[#FFF8F0]/90 p-2 -mx-2 backdrop-blur-sm rounded-2xl">
-                <button onclick="switchTab('sales')" id="tab-sales" class="flex-1 py-3 bg-white rounded-xl font-bold shadow-sm ring-2 ring-[#6D7DBF] text-[#6D7DBF]">寵物買賣</button>
-                <button onclick="switchTab('grooming')" id="tab-grooming" class="flex-1 py-3 bg-white/50 rounded-xl font-bold text-gray-400 hover:bg-white">美容服務</button>
+
+        <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
+            
+            <!-- 分頁切換 -->
+            <div class="flex gap-3 sticky top-[calc(4.5rem+env(safe-area-inset-top))] z-30 bg-[#FFF8F0]/95 p-2 -mx-2 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50">
+                <button onclick="switchTab('sales')" id="tab-sales" class="flex-1 py-3 bg-white rounded-xl font-bold shadow-sm ring-2 ring-[#6D7DBF] text-[#6D7DBF] active:scale-95 transition-all">
+                    寵物買賣
+                </button>
+                <button onclick="switchTab('grooming')" id="tab-grooming" class="flex-1 py-3 bg-white/50 rounded-xl font-bold text-gray-400 hover:bg-white active:scale-95 transition-all">
+                    美容服務
+                </button>
             </div>
 
-                        <!-- 分頁切換 -->
-            <div class="flex gap-4 sticky top-20 z-30 bg-[#FFF8F0]/90 p-2 -mx-2 backdrop-blur-sm rounded-2xl">
-                <!-- ... 兩個 button ... -->
-            </div>
-
-            <!-- ✅ 新增：搜尋框 -->
-            <div class="relative">
-                <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="search-input" onkeyup="filterData()" placeholder="搜尋姓名、電話或寵物名..."
-                       class="w-full p-4 pl-12 rounded-xl border bg-white focus:ring-2 focus:ring-[#D4B5A0] outline-none text-base transition-all shadow-sm">
+            <!-- 搜尋框 -->
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="w-5 h-5 text-gray-400 group-focus-within:text-[#D4B5A0] transition-colors"></i>
+                </div>
+                <input type="search" id="search-input" placeholder="搜尋姓名、電話或寵物名..." 
+                       enterkeyhint="search"
+                       class="w-full p-4 pl-12 rounded-2xl border-0 bg-white shadow-sm ring-1 ring-gray-100 focus:ring-2 focus:ring-[#D4B5A0] outline-none text-base transition-all appearance-none">
             </div>
 
             <!-- 列表容器 -->
-
             <div id="content-area" class="space-y-4">
                 <div class="text-center py-10 text-gray-400">載入中...</div>
             </div>
         </div>
     </div>
 
-    <!-- 詳情/編輯 彈窗 -->
-    <div id="detail-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300" id="modal-panel">
-            <div class="p-6 border-b flex justify-between items-center bg-[#FAF5F0] rounded-t-3xl">
-                <h2 class="text-xl font-black text-[#5D5046]" id="modal-title">合約詳情</h2>
-                <button onclick="closeModal()" class="p-2 hover:bg-gray-200 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- ✨ 修改密碼彈窗 -->
+    <div id="change-password-modal" class="fixed inset-0 bg-black/60 hidden z-[60] flex items-center justify-center p-6 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-3xl w-full max-w-md text-center space-y-6 shadow-2xl transform scale-95 transition-transform duration-300" id="change-password-panel">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-black text-[#5D5046]">變更管理密碼</h3>
+                <button onclick="closeChangePasswordModal()" class="p-2 hover:bg-gray-100 rounded-full transition">
+                    <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+                </button>
             </div>
-            <div class="p-6 overflow-y-auto no-scrollbar flex-1 space-y-6" id="modal-content"></div>
-            <div class="p-6 border-t bg-white rounded-b-3xl flex justify-between items-center gap-4">
-    <button onclick="requestDelete()" class="text-red-500 font-bold px-4 py-2 hover:bg-red-50 rounded-xl transition flex items-center gap-2">
-        <i data-lucide="trash-2" class="w-4 h-4"></i> 刪除此單
-    </button>
-    <div class="flex gap-3">
-                <div class="flex gap-3">
-        <button onclick="requestEdit()" id="btn-edit" class="bg-gray-100 text-gray-600 px-6 py-2 rounded-xl font-bold hover:bg-gray-200 transition">編輯</button>
-        <button onclick="saveChanges()" id="btn-save" class="hidden bg-[#D4B5A0] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#A89985] transition shadow-lg shadow-[#D4B5A0]/30">儲存變更</button>
-    </div>
-</div>
+            
+            <div class="space-y-4 text-left">
+                <div class="relative">
+                    <i data-lucide="lock" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="password" id="current-password" placeholder="輸入舊密碼" 
+                           class="w-full p-3 pl-12 rounded-xl border bg-[#FAF5F0] focus:ring-2 focus:ring-[#D4B5A0] outline-none text-base transition-all">
+                </div>
+                
+                <div class="relative">
+                    <i data-lucide="key-round" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="password" id="new-password" placeholder="新密碼 (至少6位)" 
+                           class="w-full p-3 pl-12 rounded-xl border bg-[#FAF5F0] focus:ring-2 focus:ring-[#D4B5A0] outline-none text-base transition-all">
+                </div>
+                
+                <div class="relative">
+                    <i data-lucide="shield-check" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="password" id="confirm-new-password" placeholder="確認新密碼" 
+                           class="w-full p-3 pl-12 rounded-xl border bg-[#FAF5F0] focus:ring-2 focus:ring-[#D4B5A0] outline-none text-base transition-all">
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="closeChangePasswordModal()" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl active:scale-95 transition">
+                    取消
+                </button>
+                <button onclick="handleChangePassword()" id="change-password-btn" class="flex-1 py-3 bg-[#5D5046] text-white font-bold rounded-xl active:scale-95 transition shadow-lg shadow-[#5D5046]/20">
+                    確認修改
+                </button>
+            </div>
         </div>
     </div>
 
-        <!-- ✅ 新增：密碼確認彈窗 -->
-    <div id="password-confirm-modal" class="fixed inset-0 bg-black/60 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-        <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center space-y-6 shadow-xl transform scale-95 transition-transform duration-300" id="password-modal-panel">
-            <h3 class="text-xl font-black text-[#5D5046]">需要管理員權限</h3>
-            <p class="text-sm text-gray-500">為確保安全，請再次輸入您的登入密碼以繼續此操作。</p>
+    <!-- 詳情/編輯彈窗 -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/40 hidden z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-[2px] opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-3xl rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl transform transition-transform duration-300 max-h-[92vh] sm:max-h-[85vh]" id="modal-panel">
+            
+            <div class="p-5 border-b flex justify-between items-center bg-[#FAF5F0] rounded-t-3xl shrink-0 sticky top-0 z-10">
+                <h2 class="text-xl font-black text-[#5D5046]" id="modal-title">合約詳情</h2>
+                <button onclick="closeModal()" class="p-2 bg-white rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition shadow-sm">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto no-scrollbar flex-1 space-y-6 pb-10" id="modal-content"></div>
+            
+            <div class="p-5 border-t bg-white rounded-b-none sm:rounded-b-3xl flex justify-between items-center gap-3 shrink-0 pb-[env(safe-area-inset-bottom)]">
+                <button onclick="requestDelete()" class="text-red-500 font-bold px-4 py-3 hover:bg-red-50 rounded-xl transition active:scale-95 flex items-center gap-2 text-sm sm:text-base">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden sm:inline">刪除此單</span><span class="sm:hidden">刪除</span>
+                </button>
+                <div class="flex gap-3 flex-1 justify-end">
+                    <button onclick="requestEdit()" id="btn-edit" class="bg-gray-100 text-gray-600 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition active:scale-95 flex-1 sm:flex-none">
+                        編輯
+                    </button>
+                    <button onclick="saveChanges()" id="btn-save" class="hidden bg-[#D4B5A0] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#A89985] transition active:scale-95 shadow-lg shadow-[#D4B5A0]/30 flex-1 sm:flex-none">
+                        儲存變更
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 密碼確認彈窗 -->
+    <div id="password-confirm-modal" class="fixed inset-0 bg-black/60 hidden z-[60] flex items-center justify-center p-6 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-3xl w-full max-w-xs text-center space-y-6 shadow-2xl transform scale-95 transition-transform duration-300" id="password-modal-panel">
+            <h3 class="text-lg font-black text-[#5D5046]">權限驗證</h3>
             <div class="relative">
                 <i data-lucide="key-round" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="password" id="confirm-password" placeholder="再次輸入密碼" class="w-full p-4 pl-12 rounded-xl border bg-[#FAF5F0] focus:ring-2 focus:ring-red-400 outline-none text-base transition-all">
+                <input type="password" id="confirm-password" placeholder="輸入密碼" class="w-full p-3 pl-12 rounded-xl border bg-[#FAF5F0] focus:ring-2 focus:ring-red-400 outline-none text-base transition-all">
             </div>
             <div class="flex gap-3">
-                <button onclick="closePasswordConfirmModal()" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">取消</button>
-                <button onclick="handlePasswordConfirm()" id="confirm-action-btn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition">確認操作</button>
+                <button onclick="closePasswordConfirmModal()" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl active:scale-95 transition">取消</button>
+                <button onclick="handlePasswordConfirm()" id="confirm-action-btn" class="flex-1 py-3 bg-[#5D5046] text-white font-bold rounded-xl active:scale-95 transition">確認</button>
             </div>
         </div>
     </div>
 
-        <!-- ✅ 新增：刪除確認彈窗 -->
-    <div id="delete-confirm-modal" class="fixed inset-0 bg-black/60 hidden z-[70] flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
-        <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center space-y-6 shadow-xl transform scale-95 transition-transform duration-300" id="delete-modal-panel">
-            <div class="mx-auto w-16 h-16 rounded-full bg-red-100 flex items-center justify-center border-4 border-red-50">
-                <i data-lucide="shield-alert" class="w-8 h-8 text-red-500"></i>
+    <!-- 刪除確認彈窗 -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-black/60 hidden z-[70] flex items-center justify-center p-6 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-3xl w-full max-w-xs text-center space-y-4 shadow-2xl transform scale-95 transition-transform duration-300" id="delete-modal-panel">
+            <div class="mx-auto w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-2">
+                <i data-lucide="alert-triangle" class="w-7 h-7"></i>
             </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-black text-red-800">確認刪除</h3>
-                <p class="text-sm text-gray-500">
-                    確定要刪除這筆資料嗎？<br>
-                    <span class="font-bold">刪除後將無法復原。</span>
-                </p>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="closeDeleteConfirmModal()" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">取消</button>
-                <button onclick="proceedWithDeletion()" id="confirm-delete-btn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition">確認刪除</button>
+            <h3 class="text-lg font-black text-red-600">確認刪除？</h3>
+            <p class="text-sm text-gray-500 font-medium">此操作無法復原。</p>
+            <div class="flex gap-3 mt-4">
+                <button onclick="closeDeleteConfirmModal()" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl active:scale-95 transition">取消</button>
+                <button onclick="proceedWithDeletion()" id="confirm-delete-btn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-200 active:scale-95 transition">刪除</button>
             </div>
         </div>
     </div>
 
     <script>
         lucide.createIcons();
+
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
         
-        // ✅ 2. 新增 Toast 通知系統函式
         function showToast(message, type = 'error') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            
             const styles = {
                 error: { icon: 'shield-alert', color: 'bg-red-500' },
-                success: { icon: 'check-circle-2', color: 'bg-green-500' },
+                success: { icon: 'check-circle-2', color: 'bg-[#58A47E]' },
             };
-            const style = styles[type];
+            const style = styles[type] || styles.error;
 
-            toast.className = `flex items-center gap-3 px-6 py-3 text-white font-bold rounded-full shadow-lg transform translate-y-[-50px] opacity-0 transition-all duration-300 ease-out ${style.color}`;
-            toast.innerHTML = `
-                <i data-lucide="${style.icon}" class="w-5 h-5"></i>
-                <span>${message}</span>
-            `;
+            toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3 text-white text-sm font-bold rounded-full shadow-xl shadow-gray-200 transform -translate-y-4 opacity-0 transition-all duration-300 ease-out ${style.color}`;
+            toast.innerHTML = `<i data-lucide="${style.icon}" class="w-4 h-4"></i><span>${message}</span>`;
+            
             container.appendChild(toast);
             lucide.createIcons();
 
-            setTimeout(() => {
-                toast.classList.remove('translate-y-[-50px]', 'opacity-0');
-            }, 10);
+            requestAnimationFrame(() => {
+                toast.classList.remove('-translate-y-4', 'opacity-0');
+            });
 
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'scale-90');
+                toast.classList.add('opacity-0', '-translate-y-4');
                 setTimeout(() => toast.remove(), 300);
             }, 2500);
         }
@@ -175,64 +282,209 @@
         function formatTaiwanTime(isoString) {
             if (!isoString) return '無';
             const date = new Date(isoString);
-            return date.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            return date.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         }
 
+        // ✅ 修正 Supabase URL
         const SUPABASE_URL = 'https://gevoefsyhnboricfepay.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdldm9lZnN5aG5ib3JpY2ZlcGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNzEzOTMsImV4cCI6MjA4Mzk0NzM5M30.hI6PhjEycYj5njOCCZVcBwa8VX5F5g-mD3qXxGeYJLo';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const FIELD_SCHEMAS = {
-            sales: [ { key: 'buyer_name', label: '買方姓名' }, { key: 'buyer_phone', label: '買方電話' }, { key: 'buyer_id_number', label: '身分證字號' }, { key: 'buyer_address', label: '通訊地址' }, { key: 'buyer_birthday', label: '出生日期' }, { key: 'pet_type', label: '寵物種類' }, { key: 'pet_sex', label: '性別' }, { key: 'pet_breed', label: '寵物品種' }, { key: 'pet_color', label: '毛色' }, { key: 'pet_birthday', label: '寵物生日' }, { key: 'total_price', label: '總價' }, { key: 'delivery_date', label: '交付日期' }, { key: 'deposit_amount', label: '訂金' }, { key: 'balance_amount', label: '尾款' }, { key: 'payment_method', label: '支付方式' }, { key: 'created_at', label: '建立時間', readonly: true }, { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true } ],
-            grooming: [ { key: 'owner_name', label: '飼主姓名' }, { key: 'owner_phone', label: '飼主電話' }, { key: 'owner_email', label: 'Email' }, { key: 'owner_id', label: '身分證字號' }, { key: 'owner_address', label: '地址' }, { key: 'emergency_contact', label: '緊急聯絡人' }, { key: 'emergency_phone', label: '緊急電話' }, { key: 'pet_name', label: '寵物名字' }, { key: 'pet_breed', label: '品種' }, { key: 'pet_weight', label: '體重 (kg)' }, { key: 'pet_age', label: '年齡' }, { key: 'pet_sex', label: '性別' }, { key: 'pet_neuter', label: '結紮狀況' }, { key: 'pet_chip', label: '晶片資訊' }, { key: 'preferred_clinic', label: '指定醫院' }, { key: 'history_notes', label: '過往病史', type: 'textarea' }, { key: 'service_type', label: '主要服務' }, { key: 'total_price', label: '總金額' }, { key: 'service_details', label: '服務項目詳情', type: 'textarea' }, { key: 'created_at', label: '建立時間', readonly: true }, { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true } ]
+            sales: [ 
+                { key: 'buyer_name', label: '買方姓名' }, 
+                { key: 'buyer_phone', label: '買方電話', inputType: 'tel' },
+                { key: 'buyer_id_number', label: '身分證字號' }, 
+                { key: 'buyer_address', label: '通訊地址' }, 
+                { key: 'buyer_birthday', label: '出生日期', inputType: 'date' }, 
+                { key: 'pet_type', label: '寵物種類' }, 
+                { key: 'pet_sex', label: '性別' }, 
+                { key: 'pet_breed', label: '寵物品種' }, 
+                { key: 'pet_color', label: '毛色' }, 
+                { key: 'pet_birthday', label: '寵物生日', inputType: 'date' }, 
+                { key: 'total_price', label: '總價', inputType: 'number' },
+                { key: 'delivery_date', label: '交付日期', inputType: 'date' }, 
+                { key: 'deposit_amount', label: '訂金', inputType: 'number' }, 
+                { key: 'balance_amount', label: '尾款', inputType: 'number' }, 
+                { key: 'payment_method', label: '支付方式' }, 
+                { key: 'created_at', label: '建立時間', readonly: true }, 
+                { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true } 
+            ],
+            grooming: [ 
+                { key: 'owner_name', label: '飼主姓名' }, 
+                { key: 'owner_phone', label: '飼主電話', inputType: 'tel' }, 
+                { key: 'owner_email', label: 'Email', inputType: 'email' }, 
+                { key: 'owner_id', label: '身分證字號' }, 
+                { key: 'owner_address', label: '地址' }, 
+                { key: 'emergency_contact', label: '緊急聯絡人' }, 
+                { key: 'emergency_phone', label: '緊急電話', inputType: 'tel' }, 
+                { key: 'pet_name', label: '寵物名字' }, 
+                { key: 'pet_breed', label: '品種' }, 
+                { key: 'pet_weight', label: '體重 (kg)', inputType: 'number' }, 
+                { key: 'pet_age', label: '年齡', inputType: 'number' }, 
+                { key: 'pet_sex', label: '性別' }, 
+                { key: 'pet_neuter', label: '結紮狀況' }, 
+                { key: 'pet_chip', label: '晶片資訊' }, 
+                { key: 'preferred_clinic', label: '指定醫院' }, 
+                { key: 'history_notes', label: '過往病史', type: 'textarea' }, 
+                { key: 'service_type', label: '主要服務' }, 
+                { key: 'total_price', label: '總金額', inputType: 'number' }, 
+                { key: 'service_details', label: '服務項目詳情', type: 'textarea' }, 
+                { key: 'created_at', label: '建立時間', readonly: true }, 
+                { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true } 
+            ]
         };
+        
         let currentTab = 'sales';
         let currentItem = null;
         let pendingAction = null; 
 
-
         async function checkSession() {
             const { data: { session } } = await _supabase.auth.getSession();
-            if (session) { document.getElementById('login-view').classList.add('hidden'); document.getElementById('dashboard-view').classList.remove('hidden'); loadData('sales'); }
+            if (session) { 
+                document.getElementById('login-view').classList.add('hidden'); 
+                document.getElementById('dashboard-view').classList.remove('hidden'); 
+                loadData('sales'); 
+            }
         }
         checkSession();
 
-        // ✅ 3. 更新登入函式以使用 Toast
-        async function handleLogin() {
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', debounce(filterData, 300));
+
+        async function handleLogin(event) {
+            const btn = event.currentTarget;
+            const originalBtnHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="animate-spin w-5 h-5"></i>';
+            lucide.createIcons();
+
             const email = 'backmecat@gmail.com';
             const passwordInput = document.getElementById('password');
             const password = passwordInput.value;
 
             if (!password) {
                 showToast('請輸入密碼', 'error');
-                passwordInput.classList.add('border-red-400', 'animate-shake');
-                setTimeout(() => passwordInput.classList.remove('border-red-400', 'animate-shake'), 600);
+                passwordInput.classList.add('ring-2', 'ring-red-400', 'animate-pulse');
+                setTimeout(() => passwordInput.classList.remove('ring-2', 'ring-red-400', 'animate-pulse'), 600);
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHTML;
+                lucide.createIcons();
                 return;
             }
 
             const { error } = await _supabase.auth.signInWithPassword({ email, password });
             
             if (error) {
-                showToast('登入失敗，請檢查密碼', 'error');
-                passwordInput.classList.add('border-red-400', 'animate-shake');
-                setTimeout(() => passwordInput.classList.remove('border-red-400', 'animate-shake'), 600);
-            }
-            else {
+                showToast('密碼錯誤', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHTML;
+                lucide.createIcons();
+            } else {
+                showToast('登入成功！', 'success');
                 checkSession();
             }
         }
 
-        document.getElementById('password').addEventListener('keydown', function(event) {
-             if (event.key === 'Enter') { event.preventDefault(); handleLogin(); }
+        document.getElementById('password').addEventListener('keydown', (e) => {
+             if (e.key === 'Enter') document.querySelector('#login-view button').click(); 
         });
-        
-        const style = document.createElement('style');
-        style.innerHTML = `@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } } .animate-shake { animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; }`;
-        document.head.appendChild(style);
 
         async function handleLogout() {
             await _supabase.auth.signOut();
             location.reload();
+        }
+
+        // ✨ 修改密碼功能
+        function openChangePasswordModal() {
+            const modal = document.getElementById('change-password-modal');
+            const panel = document.getElementById('change-password-panel');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                panel.classList.remove('scale-95');
+                document.getElementById('current-password').focus();
+            }, 10);
+            lucide.createIcons();
+        }
+
+        function closeChangePasswordModal() {
+            const modal = document.getElementById('change-password-modal');
+            const panel = document.getElementById('change-password-panel');
+            modal.classList.add('opacity-0');
+            panel.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-new-password').value = '';
+            }, 300);
+        }
+
+        async function handleChangePassword() {
+            const btn = document.getElementById('change-password-btn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="animate-spin w-4 h-4"></i>';
+            lucide.createIcons();
+
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-new-password').value;
+
+            // 驗證輸入
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('請填寫所有欄位', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showToast('新密碼至少需要 6 個字元', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showToast('兩次密碼輸入不一致', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                return;
+            }
+
+            // 先驗證舊密碼
+            const email = 'backmecat@gmail.com';
+            const { error: signInError } = await _supabase.auth.signInWithPassword({ 
+                email, 
+                password: currentPassword 
+            });
+
+            if (signInError) {
+                showToast('舊密碼錯誤', 'error');
+                document.getElementById('current-password').value = '';
+                document.getElementById('current-password').focus();
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                return;
+            }
+
+            // 更新密碼
+            const { error: updateError } = await _supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (updateError) {
+                showToast('密碼更新失敗：' + updateError.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            } else {
+                showToast('密碼修改成功！', 'success');
+                closeChangePasswordModal();
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
         }
 
         function switchTab(tab) {
@@ -241,6 +493,7 @@
             const groomingBtn = document.getElementById('tab-grooming');
             const activeClass = "flex-1 py-3 bg-white rounded-xl font-bold shadow-sm ring-2 ring-[#6D7DBF] text-[#6D7DBF] transition-all";
             const inactiveClass = "flex-1 py-3 bg-white/50 rounded-xl font-bold text-gray-400 hover:bg-white transition-all";
+            
             if (tab === 'sales') {
                 salesBtn.className = activeClass;
                 groomingBtn.className = inactiveClass;
@@ -251,78 +504,91 @@
             loadData(tab);
         }
 
-        // ... switchTab() 函式之後 ...
-
-        // ✅ 重構：將 loadData 拆分為「讀取」和「渲染」
         async function loadData(type) {
             const container = document.getElementById('content-area');
-            container.innerHTML = '<div class="text-center py-10"><i data-lucide="loader" class="animate-spin mx-auto text-gray-400"></i></div>';
-            lucide.createIcons();
+            let skeletonHTML = '';
+            for (let i = 0; i < 5; i++) {
+                skeletonHTML += `
+                    <div class="skeleton-card space-y-3">
+                        <div class="flex justify-between">
+                            <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                            <div class="h-4 bg-gray-200 rounded w-1/6"></div>
+                        </div>
+                        <div class="h-6 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full mt-2"></div>
+                    </div>
+                `;
+            }
+            container.innerHTML = skeletonHTML;
             
-            // 清空搜尋框並重置篩選
             const searchInput = document.getElementById('search-input');
             if (searchInput) searchInput.value = '';
-
-            const table = type === 'sales' ? 'sales_contracts' : 'grooming_contracts';
             
+            const table = type === 'sales' ? 'sales_contracts' : 'grooming_contracts';
             const { data, error } = await _supabase.from(table).select('*').order('created_at', { ascending: false });
-
+            
             if (error) {
                 container.innerHTML = `<p class="text-red-500 text-center bg-red-50 p-4 rounded-xl">讀取錯誤：${error.message}</p>`;
                 return;
             }
-            
-            // 暫存完整資料列表
             window.fullDataList = data;
-            // 首次載入時渲染完整列表
             renderDataList(data);
         }
 
-        // ✅ 新增：專門用來渲染列表的函式
         function renderDataList(data) {
             const container = document.getElementById('content-area');
             
             if (!data || data.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-400 py-10">找不到符合條件的資料</p>';
+                container.innerHTML = `
+                    <div class="text-center py-16 px-4">
+                        <div class="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                             <i data-lucide="inbox" class="w-10 h-10 text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-500">暫無資料</h3>
+                        <p class="mt-2 text-sm text-gray-400">目前沒有符合條件的紀錄</p>
+                    </div>
+                `;
+                lucide.createIcons();
                 return;
             }
 
             container.innerHTML = data.map((item, index) => {
-                // 找到這筆資料在原始完整列表中的索引，確保 openModal 能正確運作
                 const originalIndex = window.fullDataList.findIndex(fullItem => fullItem.id === item.id);
-            
                 const name = currentTab === 'sales' ? item.buyer_name : item.owner_name;
                 const subInfo = currentTab === 'sales' ? (item.pet_breed || '未知品種') : (item.service_type || '未知服務');
-                const date = formatTaiwanTime(item.created_at);
+                const dateObj = new Date(item.created_at);
+                const date = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                
                 const badgeColor = currentTab === 'sales' ? 'bg-[#6D7DBF]/10 text-[#6D7DBF]' : 'bg-[#E0899B]/10 text-[#E0899B]';
 
                 return `
-                <div class="glass-card p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:scale-[1.01] transition-transform cursor-pointer group" onclick="openModal('${originalIndex}')">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-xs font-bold text-gray-400">${date}</span>
-                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeColor}">
-                                ${currentTab === 'sales' ? '買賣' : '美容'}
-                            </span>
+                <div class="glass-card p-5 rounded-2xl flex flex-col gap-3 active:scale-[0.98] transition-all cursor-pointer group border-l-4 ${currentTab === 'sales' ? 'border-l-[#6D7DBF]' : 'border-l-[#E0899B]'}" onclick="openModal('${originalIndex}')">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeColor}">
+                                    ${currentTab === 'sales' ? '買賣' : '美容'}
+                                </span>
+                                <span class="text-xs font-bold text-gray-400 flex items-center gap-1">
+                                    <i data-lucide="clock" class="w-3 h-3"></i> ${date}
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#5D5046]">
+                                ${name || '(無姓名)'} 
+                                <span class="text-sm font-normal text-gray-500 ml-1">(${subInfo})</span>
+                            </h3>
                         </div>
-                        <h3 class="text-xl font-black text-[#5D5046] group-hover:text-[#D4B5A0] transition-colors">
-                            ${name || '(無姓名)'} 
-                            <span class="text-sm font-normal text-gray-500 ml-1">(${subInfo})</span>
-                        </h3>
-                        <p class="text-sm text-gray-500 font-bold mt-1">金額: $${item.total_price || 0}</p>
+                        <div class="text-right">
+                             <p class="text-base font-black text-[#5D5046]">$${item.total_price || 0}</p>
+                        </div>
                     </div>
-                    <button class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-bold text-gray-600 group-hover:bg-[#D4B5A0] group-hover:text-white transition-colors">查看詳情</button>
                 </div>`;
             }).join('');
-
-            window.currentDataList = window.fullDataList; // 維持 openModal 的資料源
             lucide.createIcons();
         }
 
-        // ✅ 新增：搜尋過濾函式
         function filterData() {
             const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
-            
             if (!window.fullDataList) return;
 
             const filteredData = window.fullDataList.filter(item => {
@@ -331,17 +597,15 @@
                     const buyerPhone = (item.buyer_phone || '').toLowerCase();
                     const petBreed = (item.pet_breed || '').toLowerCase();
                     return buyerName.includes(searchTerm) || buyerPhone.includes(searchTerm) || petBreed.includes(searchTerm);
-                } else { // grooming
+                } else { 
                     const ownerName = (item.owner_name || '').toLowerCase();
                     const ownerPhone = (item.owner_phone || '').toLowerCase();
                     const petName = (item.pet_name || '').toLowerCase();
                     return ownerName.includes(searchTerm) || ownerPhone.includes(searchTerm) || petName.includes(searchTerm);
                 }
             });
-
             renderDataList(filteredData);
         }
-
 
         const modal = document.getElementById('detail-modal');
         const modalPanel = document.getElementById('modal-panel');
@@ -350,68 +614,74 @@
             currentItem = window.fullDataList[index]; 
             const schema = FIELD_SCHEMAS[currentTab];
             const contentDiv = document.getElementById('modal-content');
+            
             document.getElementById('btn-edit').classList.remove('hidden');
             document.getElementById('btn-save').classList.add('hidden');
-            let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+            
+            let html = '<div class="space-y-4">';
+            
             schema.forEach(field => {
                 let value = currentItem[field.key];
-                if (field.key === 'created_at' && value) { value = formatTaiwanTime(value); } else { if (value === null || typeof value === 'undefined' || value === '') { value = '(未填寫)'; } }
-                if (field.type === 'image') { html += `<div class="col-span-1 md:col-span-2 mt-4"><label class="block text-xs font-bold text-gray-400 mb-2">${field.label}</label><div class="border-2 border-dashed border-gray-200 rounded-xl p-2 bg-gray-50"><img src="${value}" class="max-h-40 mx-auto object-contain" onerror="this.style.display='none'"></div></div>`; } else if (field.type === 'textarea') { html += `<div class="col-span-1 md:col-span-2"><label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label><textarea data-key="${field.key}" disabled class="editable-field w-full p-3 rounded-xl border bg-gray-50 text-gray-700 font-medium resize-none h-24 focus:bg-white focus:ring-2 ring-[#D4B5A0] outline-none transition-all">${value}</textarea></div>`; } else { const isReadOnly = field.readonly ? 'readonly-field' : 'editable-field'; const bgClass = field.readonly ? 'bg-gray-100/50 text-gray-400' : 'bg-gray-50 text-gray-700'; html += `<div><label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label><input type="text" data-key="${field.key}" value="${value}" disabled class="${isReadOnly} ${bgClass} w-full p-3 rounded-xl border font-medium focus:bg-white focus:ring-2 ring-[#D4B5A0] outline-none transition-all"></div>`; }
+                if (field.key === 'created_at' && value) value = formatTaiwanTime(value);
+                if (value === null || typeof value === 'undefined' || value === '') value = '(未填寫)';
+
+                if (field.type === 'image') { 
+                    html += `
+                    <div class="mt-4">
+                        <label class="block text-xs font-bold text-gray-400 mb-2 flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> ${field.label}</label>
+                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-2 bg-gray-50">
+                            <img src="${value}" class="max-h-40 mx-auto object-contain" onerror="this.style.display='none'">
+                        </div>
+                    </div>`; 
+                } else if (field.type === 'textarea') { 
+                    html += `
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
+                        <textarea data-key="${field.key}" disabled 
+                            class="editable-field w-full p-3 rounded-xl border bg-gray-50 text-gray-700 font-medium resize-none h-24 focus:bg-white focus:ring-2 focus:ring-[#D4B5A0] outline-none transition-all">${value}</textarea>
+                    </div>`; 
+                } else { 
+                    const isReadOnly = field.readonly ? 'readonly-field' : 'editable-field'; 
+                    const bgClass = field.readonly ? 'bg-gray-100/50 text-gray-400' : 'bg-gray-50 text-gray-700';
+                    const inputType = field.inputType || 'text';
+                    
+                    html += `
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
+                        <input type="${inputType}" data-key="${field.key}" value="${value}" disabled 
+                            class="${isReadOnly} ${bgClass} w-full p-3 rounded-xl border font-medium focus:bg-white focus:ring-2 focus:ring-[#D4B5A0] outline-none transition-all appearance-none">
+                    </div>`; 
+                }
             });
             html += '</div>';
             contentDiv.innerHTML = html;
+            
             modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); modalPanel.classList.remove('scale-95'); }, 10);
+            setTimeout(() => { 
+                modal.classList.remove('opacity-0'); 
+                modalPanel.classList.remove('translate-y-full');
+                modalPanel.classList.remove('scale-95');
+            }, 10);
+            
+            lucide.createIcons();
         }
 
         function closeModal() {
             modal.classList.add('opacity-0');
+            modalPanel.classList.add('translate-y-full');
             modalPanel.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
-                function requestEdit() {
-            pendingAction = enableEdit; // 設定密碼驗證成功後要執行的動作
+        function requestEdit() {
+            pendingAction = enableEdit; 
             openPasswordConfirmModal();
         }
-function requestDelete() {
-    openDeleteConfirmModal();
-}
-
-
-        // 真正的執行函式
-        function enableEdit() {
-            document.getElementById('btn-edit').classList.add('hidden');
-            document.getElementById('btn-save').classList.remove('hidden');
-            document.querySelectorAll('.editable-field').forEach(input => {
-                input.disabled = false;
-                input.classList.remove('bg-gray-50');
-                input.classList.add('bg-white', 'border-[#D4B5A0]');
-                if (input.value === '(未填寫)') { input.value = ''; }
-            });
+        
+        function requestDelete() {
+            openDeleteConfirmModal();
         }
-        async function saveChanges() {
-            const updates = {};
-            document.querySelectorAll('.editable-field').forEach(input => {
-                const key = input.getAttribute('data-key');
-                updates[key] = input.value;
-            });
-            const table = currentTab === 'sales' ? 'sales_contracts' : 'grooming_contracts';
-            const btn = document.getElementById('btn-save');
-            btn.innerText = '儲存中...';
-            btn.disabled = true;
-            const { error } = await _supabase.from(table).update(updates).eq('id', currentItem.id);
-            
-            if (error) {
-                showToast('儲存失敗：' + error.message, 'error');
-                btn.innerText = '儲存變更';
-                btn.disabled = false;
-            } else {
-                showToast('儲存成功！', 'success');
-                closeModal();
-                loadData(currentTab);
-            }
-        }
+
         async function deleteCurrentItem() {
             const table = currentTab === 'sales' ? 'sales_contracts' : 'grooming_contracts';
             const { error } = await _supabase.from(table).delete().eq('id', currentItem.id);
@@ -430,12 +700,11 @@ function requestDelete() {
             document.querySelectorAll('.editable-field').forEach(input => {
                 input.disabled = false;
                 input.classList.remove('bg-gray-50');
-                input.classList.add('bg-white', 'border-[#D4B5A0]');
-                if (input.value === '(未填寫)') { input.value = ''; }
+                input.classList.add('bg-white', 'border-[#D4B5A0]', 'ring-2', 'ring-[#D4B5A0]/20');
+                if (input.value === '(未填寫)') input.value = '';
             });
         }
 
-        // ✅ 4. (加分) 將後台的 alert 也改為 Toast
         async function saveChanges() {
             const updates = {};
             document.querySelectorAll('.editable-field').forEach(input => {
@@ -444,13 +713,15 @@ function requestDelete() {
             });
             const table = currentTab === 'sales' ? 'sales_contracts' : 'grooming_contracts';
             const btn = document.getElementById('btn-save');
-            const originalText = btn.innerText;
-            btn.innerText = '儲存中...';
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader" class="animate-spin w-4 h-4"></i>';
             btn.disabled = true;
+            lucide.createIcons();
+
             const { error } = await _supabase.from(table).update(updates).eq('id', currentItem.id);
             if (error) {
-                showToast('儲存失敗：' + error.message, 'error');
-                btn.innerText = originalText;
+                showToast('儲存失敗', 'error');
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             } else {
                 showToast('儲存成功！', 'success');
@@ -463,91 +734,97 @@ function requestDelete() {
             if (e.target === modal) closeModal();
         });
 
-                // ✅ 新增：密碼確認彈窗的相關函式
         const passwordModal = document.getElementById('password-confirm-modal');
         const passwordModalPanel = document.getElementById('password-modal-panel');
         const confirmPasswordInput = document.getElementById('confirm-password');
+
         function openPasswordConfirmModal() {
             passwordModal.classList.remove('hidden');
             setTimeout(() => {
                 passwordModal.classList.remove('opacity-0');
                 passwordModalPanel.classList.remove('scale-95');
-                confirmPasswordInput.focus(); // 自動聚焦到輸入框
+                confirmPasswordInput.focus();
             }, 10);
         }
+        
         function closePasswordConfirmModal() {
             passwordModal.classList.add('opacity-0');
             passwordModalPanel.classList.add('scale-95');
             setTimeout(() => {
                 passwordModal.classList.add('hidden');
-                confirmPasswordInput.value = ''; // 清空密碼
-                pendingAction = null; // 清除待辦動作
+                confirmPasswordInput.value = ''; 
+                pendingAction = null; 
             }, 300);
         }
+
         async function handlePasswordConfirm() {
+            const btn = document.getElementById('confirm-action-btn');
+            const originalBtnHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" class="animate-spin w-4 h-4"></i>';
+            lucide.createIcons();
+
             const password = confirmPasswordInput.value;
             if (!password) {
                 showToast('請輸入密碼', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHTML;
                 return;
             }
             
-            // 再次使用登入邏輯來驗證密碼
             const email = 'backmecat@gmail.com';
             const { error } = await _supabase.auth.signInWithPassword({ email, password });
+            
             if (error) {
-                showToast('密碼錯誤，請重試', 'error');
+                showToast('密碼錯誤', 'error');
                 confirmPasswordInput.value = '';
-                // 增加錯誤動畫
                 passwordModalPanel.classList.add('animate-shake');
                 setTimeout(() => passwordModalPanel.classList.remove('animate-shake'), 600);
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHTML;
             } else {
                 showToast('驗證成功', 'success');
                 closePasswordConfirmModal();
-                // 執行之前被擱置的動作 (編輯或刪除)
-                if (pendingAction) {
-                    pendingAction();
-                }
+                if (pendingAction) pendingAction();
             }
         }
-        // 讓密碼彈窗也可以按 Enter 確認
-        confirmPasswordInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                handlePasswordConfirm();
+
+        confirmPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handlePasswordConfirm();
+        });
+
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        const deleteConfirmModalPanel = document.getElementById('delete-modal-panel');
+
+        function openDeleteConfirmModal() {
+            deleteConfirmModal.classList.remove('hidden');
+            setTimeout(() => {
+                deleteConfirmModal.classList.remove('opacity-0');
+                deleteConfirmModalPanel.classList.remove('scale-95');
+            }, 10);
+        }
+        
+        function closeDeleteConfirmModal() {
+            deleteConfirmModal.classList.add('opacity-0');
+            deleteConfirmModalPanel.classList.add('scale-95');
+            setTimeout(() => deleteConfirmModal.classList.add('hidden'), 300);
+        }
+        
+        function proceedWithDeletion() {
+            closeDeleteConfirmModal();
+            closeModal(); 
+            pendingAction = deleteCurrentItem;
+            setTimeout(() => openPasswordConfirmModal(), 300);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!deleteConfirmModal.classList.contains('hidden')) closeDeleteConfirmModal();
+                else if (!passwordModal.classList.contains('hidden')) closePasswordConfirmModal();
+                else if (!modal.classList.contains('hidden')) closeModal();
+                else if (!document.getElementById('change-password-modal').classList.contains('hidden')) closeChangePasswordModal();
             }
         });
-const deleteConfirmModal = document.getElementById('delete-confirm-modal');
-const deleteConfirmModalPanel = document.getElementById('delete-modal-panel');
-function openDeleteConfirmModal() {
-    // 1. 移除 'hidden' 讓元素可見
-    deleteConfirmModal.classList.remove('hidden');
-    // 2. 透過微小的延遲觸發 CSS transition 動畫
-    setTimeout(() => {
-        deleteConfirmModal.classList.remove('opacity-0');
-        deleteConfirmModalPanel.classList.remove('scale-95');
-        lucide.createIcons(); // 確保新彈窗的 icon 能渲染
-    }, 10);
-}
-
-function closeDeleteConfirmModal() {
-    deleteConfirmModal.classList.add('opacity-0');
-    deleteConfirmModalPanel.classList.add('scale-95');
-    setTimeout(() => {
-        deleteConfirmModal.classList.add('hidden');
-    }, 300);
-}
-
-function proceedWithDeletion() {
-    // 1. 同時開始關閉兩個彈窗
-    closeDeleteConfirmModal();
-    closeModal(); // 👈 新增這行！
-    // 2. 接著執行原來的邏輯：設定待辦事項並打開密碼驗證彈窗
-    pendingAction = deleteCurrentItem;
-    setTimeout(() => { // 延遲一點打開，避免動畫重疊
-        openPasswordConfirmModal();
-    }, 300); // 等待關閉動畫完成
-}
-
     </script>
 </body>
 </html>
