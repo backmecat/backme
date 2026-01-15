@@ -1,0 +1,35 @@
+{
+  "name": "貝可米努奶喵館",
+  "short_name": "貝可米努",
+  "description": "專業貓咪買賣與美容服務 - 台中市西屯區",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#FFF8F0",
+  "theme_color": "#D4B5A0",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "144x144",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "lifestyle"],
+  "lang": "zh-TW",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false
+}

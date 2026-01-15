@@ -3,11 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA 配置 -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="apple-touch-icon" sizes="152x152" href="logo.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="logo.jpg">
+    <link rel="apple-touch-icon" sizes="167x167" href="logo.jpg">
+    
+    <!-- PWA 设置 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="貝可米努管理">
     <meta name="theme-color" content="#FFF8F0">
+    <meta name="robots" content="noindex, nofollow">
 
     <title>貝可米努 | 後台管理系統</title>
+    
+    <!-- PWA Service Worker 注册 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('✅ PWA 已启用:', reg.scope))
+                    .catch(err => console.log('❌ PWA 注册失败:', err));
+            });
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>

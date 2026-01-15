@@ -6,14 +6,32 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- PWA 配置 -->
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="apple-touch-icon" sizes="152x152" href="logo.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="logo.jpg">
+    <link rel="apple-touch-icon" sizes="167x167" href="logo.jpg">
 
-     <!-- === 新增：PWA 偽裝設定 === -->
+    <!-- PWA 设置 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="貝可米努">
     <meta name="theme-color" content="#FFF8F0">
     <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Service Worker 注册 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('✅ PWA 已启用:', reg.scope))
+                    .catch(err => console.log('❌ PWA 注册失败:', err));
+            });
+        }
+    </script>
 
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -255,7 +273,7 @@ body {
     
     <div class="toast-container" id="toastContainer"></div>
 
-<nav class="fixed top-0 w-full z-40 bg-brand-bg/90 backdrop-blur-xl border-b border-brand-main/10 px-4 py-4 flex justify-between items-center transition-all shadow-sm" id="navbar">
+<nav class="fixed top-0 w-full z-40 bg-brand-bg/90 backdrop-blur-xl border-b border-brand-main/10 px-4 flex justify-between items-center transition-all shadow-sm pt-[calc(1rem+env(safe-area-inset-top))] pb-4" id="navbar">
     <div class="font-black text-xl italic flex items-center gap-2 text-brand-dark cursor-pointer active-bounce" onclick="router('home')">
 <img src="logo.jpg" 
      alt="貝可米努 Logo" 
