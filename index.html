@@ -2133,13 +2133,24 @@ const emergPhone = ownerInfoSection.querySelector('input[placeholder="電話"]')
             historyNotes = checkedDiseases.join(', ');
         }
 
-// C. 服務與金額 (✅ 優化版：記錄所有明細)
+// C. 服務與金額 (✅ 最終優化版：記錄主服務類型)
+// ✨ 新增：判斷主服務類型
+let mainServiceType = '';
+const btnWash = document.getElementById('btn-wash');
+// 使用 'ring-2' 這個 class 來判斷按鈕是否被選中
+if (btnWash.classList.contains('ring-2')) {
+    mainServiceType = '精緻美容洗';
+} else {
+    mainServiceType = '剃毛美容';
+}
+
 const baseServiceEl = document.querySelector('input[name="basePrice"]:checked');
 const baseServiceText = baseServiceEl.closest('.price-radio').querySelector('span').innerText;
 const basePriceVal = baseServiceEl.value;
 
-// 1. 建立服務詳情陣列，先放入基礎服務
+// 1. 建立服務詳情陣列，現在基礎服務只記錄毛長和價格
 let serviceDetails = [`基礎: ${baseServiceText} ($${basePriceVal})`];
+
 
 // 2. 抓取所有勾選的加購項目
 document.querySelectorAll('.calc-check:checked').forEach(el => {
@@ -2202,7 +2213,7 @@ const totalPrice = document.getElementById('finalDisplay').innerText;
                 pet_neuter: petNeuter, // 結紮狀況
                 pet_chip: finalChip,   // 晶片資訊
                 history_notes: historyNotes,
-                service_type: baseServiceText,
+                service_type: mainServiceType, // << 修正：存入我們剛剛判斷好的主服務類型
                 service_details: serviceDetails.join(', '),
                 total_price: totalPrice,
                 signature_url: signatureUrl,
