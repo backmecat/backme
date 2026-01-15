@@ -2095,16 +2095,16 @@ async function submitGrooming() {
     lucide.createIcons();
 
     try {
-// A. 抓取飼主資料 (修正緊急聯絡人抓取方式)
-const allTextInputs = document.querySelectorAll('#view-grooming .input-style[type="text"]');
-const allTelInputs = document.querySelectorAll('#view-grooming .input-style[type="tel"]');
+// A. 抓取飼主資料 (已修正緊急聯絡人抓取方式)
 const ownerName = document.querySelector('#view-grooming input[placeholder="請輸入姓名"]').value;
-const ownerPhone = allTelInputs[0]?.value || ''; // 第一個電話是飼主的
+const ownerPhone = document.querySelector('#searchPhone').value;
 const ownerEmail = document.querySelector('#view-grooming input[placeholder="example@email.com"]').value;
 const ownerId = document.querySelector('#view-grooming input[placeholder="請輸入身分證字號"]').value;
 const ownerAddress = document.querySelector('#view-grooming input[placeholder="請輸入完整地址"]').value;
-const emergName = allTextInputs[allTextInputs.length - 2]?.value || ''; // 倒數第二個 text input
-const emergPhone = allTelInputs[allTelInputs.length - 1]?.value || ''; // 最後一個 tel input
+const ownerInfoSection = document.querySelector('#view-grooming section:first-of-type');
+const emergName = ownerInfoSection.querySelector('input[placeholder="姓名"]').value;
+const emergPhone = ownerInfoSection.querySelector('input[placeholder="電話"]').value;
+
 
 
         // B. 抓取寵物資料
@@ -2133,20 +2133,46 @@ const emergPhone = allTelInputs[allTelInputs.length - 1]?.value || ''; // 最後
             historyNotes = checkedDiseases.join(', ');
         }
 
-        // C. 服務與金額
-        const baseServiceEl = document.querySelector('input[name="basePrice"]:checked');
-        const baseServiceText = baseServiceEl.closest('.price-radio').querySelector('span').innerText;
-        const basePriceVal = baseServiceEl.value;
-        
-        // 抓取加購項目
-        let serviceDetails = [`基礎: ${baseServiceText} ($${basePriceVal})`];
-        document.querySelectorAll('.calc-check:checked').forEach(el => {
-            const label = el.parentElement.innerText.trim();
-            serviceDetails.push(label);
-        });
-        
-        // 抓取總金額
-        const totalPrice = document.getElementById('finalDisplay').innerText;
+// C. 服務與金額 (✅ 優化版：記錄所有明細)
+const baseServiceEl = document.querySelector('input[name="basePrice"]:checked');
+const baseServiceText = baseServiceEl.closest('.price-radio').querySelector('span').innerText;
+const basePriceVal = baseServiceEl.value;
+
+// 1. 建立服務詳情陣列，先放入基礎服務
+let serviceDetails = [`基礎: ${baseServiceText} ($${basePriceVal})`];
+
+// 2. 抓取所有勾選的加購項目
+document.querySelectorAll('.calc-check:checked').forEach(el => {
+    // .innerText 會抓到價格，所以我們取 label 的文字部分
+    const labelText = el.nextElementSibling.innerText.trim(); 
+    serviceDetails.push(labelText);
+});
+
+// 3. ✨ 新增：記錄手動輸入的特殊加價 (如果金額 > 0)
+const feeMatting = parseInt(document.getElementById('fee-matting').value) || 0;
+const feeAggressive = parseInt(document.getElementById('fee-aggressive').value) || 0;
+const feeOther = parseInt(document.getElementById('fee-other').value) || 0;
+
+if (feeMatting > 0) {
+    serviceDetails.push(`毛髮拆結 (+${feeMatting})`);
+}
+if (feeAggressive > 0) {
+    serviceDetails.push(`情緒安撫 (+${feeAggressive})`);
+}
+if (feeOther > 0) {
+    serviceDetails.push(`其他加價 (+${feeOther})`);
+}
+
+// 4. ✨ 新增：記錄手動調整的金額 (如果不是 0)
+// manualAdjustment 是您計算機功能裡的全局變量
+if (manualAdjustment !== 0) {
+    const sign = manualAdjustment > 0 ? '+' : '';
+    serviceDetails.push(`手動調整 (${sign}${manualAdjustment})`);
+}
+
+// 5. 抓取最終總金額
+const totalPrice = document.getElementById('finalDisplay').innerText;
+
 
         // D. 上傳簽名
         const signatureDataUrl = document.getElementById('img-owner').src;
@@ -2222,17 +2248,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.body.classList.contains('modal-open')) e.preventDefault();
         }, { passive: false });
         
-// --- 舊客帶入功能 ---
+ // --- 舊客帶入功能 ---
 
-// --- 舊客帶入功能 (安全版) ---
 
-// 1. 搜尋舊客資料
+// 1. 搜尋舊客資料 (✅ 最終版：永遠顯示選擇列表)
 async function searchOldGuest() {
     const phoneInput = document.getElementById('searchPhone');
-    // 移除連字號與空白，確保傳送純數字
     const phone = phoneInput.value.replace(/[-\s]/g, '').trim();
 
-    // 安全檢查：前端先擋一次，必須輸入完整 10 碼 (09xx...)
     if (!phone || phone.length < 10) {
         showToast('為確保個資安全，請輸入完整手機號碼', 'warning');
         return;
@@ -2240,26 +2263,38 @@ async function searchOldGuest() {
 
     const btn = event.currentTarget;
     const originalContent = btn.innerHTML;
-    // 轉圈圈特效
     btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i>`;
     btn.disabled = true;
     lucide.createIcons();
 
     try {
-        // === 關鍵修改：呼叫 Supabase 安全函式 ===
         const { data, error } = await _supabase
             .rpc('search_grooming_history', { phone_input: phone });
 
         if (error) throw error;
 
-if (!data || data.length === 0) {
-    showToast('找不到此電話的過往紀錄', 'info');
-} else {
-    renderHistoryList(data);
-    const modal = document.getElementById('historyModal');
-    modal.style.display = 'flex'; // <-- 新的
-    showToast(`找到 ${data.length} 隻毛孩的紀錄`, 'success');
-}
+        if (!data || data.length === 0) {
+            // Case 1: 找不到任何紀錄
+            showToast('找不到此電話的過往紀錄', 'info');
+        } else {
+            // ✅ 核心修改：無論找到幾筆，都執行以下統一流程
+            
+            // 1. 永遠先按時間排序，確保最新的在最上面
+            data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // 2. 渲染列表
+            renderHistoryList(data);
+
+            // 3. 顯示選擇視窗
+            const modal = document.getElementById('historyModal');
+            modal.style.display = 'flex';
+
+            // 4. ✅ 優化提示訊息
+            const message = data.length === 1
+                ? `找到 ${data[0].pet_name} 的紀錄，請點擊確認`
+                : `找到 ${data.length} 筆紀錄，請選擇`;
+            showToast(message, 'success');
+        }
 
     } catch (err) {
         console.error('搜尋失敗:', err);
@@ -2320,6 +2355,8 @@ function closeHistoryModal() {
 }
 
 
+// 找到這個函式，並用下面的版本完整取代
+
 // 4. 核心：將資料填入表單 (功能完整版)
 function fillFormData(data) {
     try {
@@ -2329,12 +2366,21 @@ function fillFormData(data) {
         setInputValue('#view-grooming input[placeholder="請輸入身分證字號"]', data.owner_id);
         setInputValue('#view-grooming input[placeholder="請輸入完整地址"]', data.owner_address);
         
-        // 精準定位緊急聯絡人欄位
-        const emergencyInputs = document.querySelectorAll('#view-grooming input[placeholder="姓名"], #view-grooming input[placeholder="電話"]');
-        if (emergencyInputs.length >= 4) { // 確保頁面上有足夠的輸入框
-            setInputValue(emergencyInputs[2], data.emergency_contact); // 緊急聯絡人姓名
-            setInputValue(emergencyInputs[3], data.emergency_phone);  // 緊急聯絡人電話
+        // --- ✅ START: 優化緊急聯絡人帶入邏輯 ---
+        // 透過尋找 "飼主資料 (甲方)" 區塊來精準定位
+        const ownerSection = findSectionByTitle('飼主資料 (甲方)');
+        if (ownerSection) {
+            // 在該區塊中尋找 placeholder 為 "姓名" 但不是飼主姓名的那個輸入框
+            const allNameInputs = ownerSection.querySelectorAll('input[placeholder="姓名"]');
+            if (allNameInputs.length > 0) {
+                 setInputValue(allNameInputs[allNameInputs.length - 1], data.emergency_contact); // 通常是最後一個
+            }
+            const allPhoneInputs = ownerSection.querySelectorAll('input[placeholder="電話"]');
+             if (allPhoneInputs.length > 0) {
+                 setInputValue(allPhoneInputs[allPhoneInputs.length - 1], data.emergency_phone);
+            }
         }
+        // --- ✅ END: 優化結束 ---
 
         // --- 寵物資料 ---
         const petSection = findSectionByTitle('貓咪詳細資料');
@@ -2345,13 +2391,12 @@ function fillFormData(data) {
             if(petInputs[2]) petInputs[2].value = data.pet_weight || '';
             if(petInputs[3]) petInputs[3].value = data.pet_age || '';
             
-            // 指定醫院
             const clinicInput = petSection.querySelector('input[placeholder="若未填寫，則送往特約醫院"]');
-            setInputValue(clinicInput, data.preferred_clinic); // 假設資料庫有這個欄位
+            setInputValue(clinicInput, data.preferred_clinic);
         }
 
         // --- Radio Button 欄位 ---
-        setRadioValue('petSex', data.pet_sex);
+        setRadioValue('petSex', data.pet_sex); 
         setRadioValue('petNeuter', data.pet_neuter);
 
         // --- 晶片 (複雜邏輯) ---
@@ -2365,10 +2410,10 @@ function fillFormData(data) {
             } else if (data.pet_chip.includes('不詳')) {
                 setRadioValue('pet_chip', 'unknown');
                 if (chipBlock) chipBlock.classList.add('hidden');
-            } else { // 包含 "有"
+            } else {
                 setRadioValue('pet_chip', 'has');
                 if (chipBlock) chipBlock.classList.remove('hidden');
-                const match = data.pet_chip.match(/\((.*?)\)/); // 提取括號內的號碼
+                const match = data.pet_chip.match(/\((.*?)\)/);
                 if (match && chipNumberInput) {
                     chipNumberInput.value = match[1];
                 }
@@ -2378,36 +2423,30 @@ function fillFormData(data) {
         // --- 過往病史 (最複雜的邏輯) ---
         const historyNotes = data.history_notes;
         if (!historyNotes || historyNotes.trim() === '無' || historyNotes.trim() === '') {
-            // 情況一：沒有病史
             setRadioValue('has_history', 'no');
-            toggleHistorySection(false); // 確保病史區塊是關閉的
+            toggleHistorySection(false);
         } else {
-            // 情況二：有病史
             setRadioValue('has_history', 'yes');
-            toggleHistorySection(true); // 打開病史區塊
+            toggleHistorySection(true);
 
             const diseases = historyNotes.split(', ');
             
-            // 勾選對應的 checkbox
             document.querySelectorAll('input[name="history_items[]"]').forEach(checkbox => {
                 checkbox.checked = diseases.includes(checkbox.value);
             });
             
-            // 處理 "其他" 項目
             const otherDisease = diseases.find(d => d.startsWith('其他:'));
             if (otherDisease) {
                 const otherCheckbox = document.getElementById('chk_other');
                 const otherInput = document.getElementById('other_detail_text');
                 
                 otherCheckbox.checked = true;
-                toggleOtherInput(otherCheckbox); // 顯示輸入框
+                toggleOtherInput(otherCheckbox);
                 
-                // 填入 "其他" 的內容
                 otherInput.value = otherDisease.substring('其他: '.length);
             }
         }
 
-        // --- 成功執行後的 UI 回饋 (現在可以正確執行了) ---
         closeHistoryModal();
         showToast(`已成功帶入 ${data.pet_name} 的資料！`, 'success');
 
@@ -2416,6 +2455,7 @@ function fillFormData(data) {
         showToast("帶入資料失敗，請檢查主控台錯誤", "error");
     }
 }
+
 
 
 // 輔助函式：設定 Input 值 (更安全)
