@@ -1,0 +1,88 @@
+const CACHE_NAME = 'backmecat-admin-v1.0';
+const BASE_PATH = '/backme';
+
+const urlsToCache = [
+  `${BASE_PATH}/admin.html`,
+  `${BASE_PATH}/logo.jpg`,
+  'https://cdn.tailwindcss.com',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+  'https://unpkg.com/lucide@latest',
+  'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;700&display=swap'
+];
+
+// 安裝 Service Worker
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('✅ Admin 快取已開啟');
+        return cache.addAll(urlsToCache);
+      })
+  );
+  self.skipWaiting();
+});
+
+// 啟用並清理舊快取
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName.startsWith('backmecat-admin-') && cacheName !== CACHE_NAME) {
+            console.log('🗑️ 清除舊 Admin 快取:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// 攔截請求
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response;
+        }
+        
+        return fetch(event.request).then(
+          response => {
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          }
+        ).catch(() => {
+          // 離線時返回 admin.html
+          if (event.request.destination === 'document') {
+            return caches.match(`${BASE_PATH}/admin.html`);
+          }
+        });
+      })
+  );
+});
+
+// 推送通知
+self.addEventListener('push', event => {
+  const options = {
+    body: event.data ? event.data.text() : '您有新的管理通知',
+    icon: `${BASE_PATH}/logo.jpg`,
+    badge: `${BASE_PATH}/logo.jpg`,
+    vibrate: [100, 50, 100],
+    tag: 'admin-notification'
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('貝可米努管理後台', options)
+  );
+});

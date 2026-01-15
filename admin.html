@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <!-- PWA 配置 -->
-<link rel="manifest" href="/backme/manifest.json">
+<link rel="manifest" href="/backme/manifest-admin.json">
     <link rel="icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="logo.jpg">
     <link rel="apple-touch-icon" sizes="152x152" href="logo.jpg">
@@ -25,9 +25,9 @@
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/backme/service-worker.js')
-                .then(reg => console.log('✅ PWA 已启用:', reg.scope))
-                .catch(err => console.log('❌ PWA 注册失败:', err));
+            navigator.serviceWorker.register('/backme/service-worker-admin.js')
+                .then(reg => console.log('✅ Admin PWA 已启用:', reg.scope))
+                .catch(err => console.log('❌ Admin PWA 注册失败:', err));
         });
     }
 </script>
