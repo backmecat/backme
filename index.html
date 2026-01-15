@@ -1403,23 +1403,37 @@ function dataURLtoBlob(dataurl) {
     return new Blob([u8arr], {type:mime});
 }
 
-// 輔助函式：上傳簽名 (✅ 已修正為使用 _supabase)
+// 輔助函式：上傳簽名 (✅ 修正版：移除中文字元)
 async function uploadSignature(folder, name, dataUrl) {
     const blob = dataURLtoBlob(dataUrl);
-    const fileName = `${folder}/${Date.now()}_${name}.png`;
     
-    const { data, error } = await _supabase // <--- 這裡改了
+    // ✅ 新增：將中文名稱轉換為安全的檔名
+    const safeName = name
+        .replace(/[\u4e00-\u9fa5]/g, 'user')  // 將中文字替換為 'user'
+        .replace(/[^a-zA-Z0-9_-]/g, '_')      // 移除其他特殊字元
+        .substring(0, 20);                     // 限制長度
+    
+    const timestamp = Date.now();
+    const fileName = `${folder}/${timestamp}_${safeName}.png`;
+    
+    console.log('📤 上傳檔案:', fileName); // 除錯用
+    
+    const { data, error } = await _supabase
         .storage
         .from('signatures')
         .upload(fileName, blob);
 
-    if (error) throw error;
+    if (error) {
+        console.error('❌ 上傳失敗:', error);
+        throw error;
+    }
     
-    const { data: { publicUrl } } = _supabase // <--- 這裡改了
+    const { data: { publicUrl } } = _supabase
         .storage
         .from('signatures')
         .getPublicUrl(fileName);
         
+    console.log('✅ 上傳成功:', publicUrl); // 除錯用
     return publicUrl;
 }
 
