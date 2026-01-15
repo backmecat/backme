@@ -257,8 +257,11 @@ body {
 
 <nav class="fixed top-0 w-full z-40 bg-brand-bg/90 backdrop-blur-xl border-b border-brand-main/10 px-4 py-4 flex justify-between items-center transition-all shadow-sm" id="navbar">
     <div class="font-black text-xl italic flex items-center gap-2 text-brand-dark cursor-pointer active-bounce" onclick="router('home')">
-        <img src="logo.jpg" class="w-10 h-10 rounded-full object-cover border-2 border-brand-main shadow-sm">
-        <span class="text-brand-text">BACKME</span>
+<img src="logo.jpg" 
+     alt="貝可米努 Logo" 
+     loading="lazy"
+     class="w-10 h-10 rounded-full object-cover border-2 border-brand-main shadow-sm">
+             <span class="text-brand-text">BACKME</span>
     </div>
 
     <button id="backBtn" onclick="router('home')" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-brand-dark/80 uppercase tracking-widest flex items-center gap-1 bg-white/80 px-4 py-2 rounded-full border border-brand-main/20 shadow-sm active:scale-95 transition-transform">
@@ -275,8 +278,12 @@ body {
 <div onclick="location.href='admin.html'" 
      class="cursor-pointer bg-gradient-to-br from-brand-main to-brand-dark w-32 h-32 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 text-white shadow-2xl shadow-brand-main/40 animate-float border-4 border-white overflow-hidden ring-4 ring-brand-main/10 transition-transform active:scale-95">
      
-    <img src="logo.jpg" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-    <i data-lucide="cat" class="hidden w-16 h-16"></i>
+<img src="logo.jpg" 
+     alt="貝可米努奶喵館 Logo" 
+     loading="lazy"
+     class="w-full h-full object-cover" 
+     onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+         <i data-lucide="cat" class="hidden w-16 h-16"></i>
 </div>
             <h1 class="text-3xl font-bold mb-2 tracking-tight text-brand-text drop-shadow-sm">貝可米努奶喵館</h1>
             <p class="text-brand-dark font-bold tracking-widest uppercase text-sm">Backme Cattery</p>
@@ -420,69 +427,87 @@ body {
                 <i data-lucide="coins" class="w-4 h-4"></i> 第二條：價金與支付
             </h3>
             
-            <div class="space-y-6">
-                <div class="relative max-w-[280px] mx-auto shadow-sm group mt-4">
-                    <label class="absolute -top-7 left-0 right-0 text-center text-xs font-bold text-gray-400">總價 Total Price *</label>
-                    <span class="absolute left-6 top-1/2 -translate-y-1/2 text-brand-purple font-black text-xl">NT$</span>
-                    <input type="tel" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="totalPrice" class="w-full required-field text-center text-4xl font-black text-brand-text bg-white border-2 border-brand-purple/20 rounded-3xl py-6 pl-8 focus:outline-none focus:border-brand-purple focus:shadow-glow-purple transition-all placeholder:text-gray-200" placeholder="0">
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-bold text-gray-500 block ml-1 text-center">交付日期 Delivery Date *</label>
-                    <input type="date" class="input-style required-field text-center focus:ring-2 focus:ring-brand-purple/20 bg-white/50">
-                </div>
-
-                <div class="h-px bg-brand-purple/10 w-full my-4"></div>
-
-                <div class="text-brand-purple">
-                    <label class="text-sm font-bold text-gray-500 mb-3 block text-center">付款模式 *</label>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <label class="option-card flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:border-brand-purple/30 shadow-sm">
-                            <input type="radio" name="paymentStructure" value="full" class="hidden" onchange="togglePaymentFields(false)">
-                            <span class="text-base font-bold">全額付清</span>
-                        </label>
-                        <label class="option-card flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:border-brand-purple/30 shadow-sm">
-                            <input type="radio" name="paymentStructure" value="deposit" class="hidden" onchange="togglePaymentFields(true)">
-                            <span class="text-base font-bold">先付定金</span>
-                        </label>
-                    </div>
-
-<div id="splitPaymentFields" class="hidden grid grid-cols-2 gap-4 animate-fade-in bg-white/50 p-4 rounded-2xl border border-white">
-    <div class="space-y-1">
-        <label class="text-xs font-bold text-gray-400 block text-center">定金</label>
-        <!-- 加入 id="depositInput", 改用 tel, 加入限制 -->
-        <input type="tel" id="depositInput" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input-style text-center border-gray-200/80 font-mono text-lg font-bold" placeholder="0">
+<div class="space-y-6">
+    <div class="relative max-w-[280px] mx-auto shadow-sm group mt-4">
+        <label class="absolute -top-7 left-0 right-0 text-center text-xs font-bold text-gray-400">總價 Total Price *</label>
+        <span class="absolute left-6 top-1/2 -translate-y-1/2 text-brand-purple font-black text-xl">NT$</span>
+        <input type="tel" 
+               inputmode="numeric" 
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+               id="totalPrice" 
+               class="w-full required-field text-center text-4xl font-black text-brand-text bg-white border-2 border-brand-purple/20 rounded-3xl py-6 pl-8 focus:outline-none focus:border-brand-purple focus:shadow-glow-purple transition-all placeholder:text-gray-200" 
+               placeholder="0">
     </div>
-    <div class="space-y-1">
-        <label class="text-xs font-bold text-gray-400 block text-center">尾款</label>
-        <!-- 加入 id="balanceInput", 改用 tel, 加入限制 -->
-        <input type="tel" id="balanceInput" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input-style text-center border-gray-200/80 font-mono text-lg font-bold" placeholder="0">
+
+    <div class="space-y-2">
+        <label class="text-sm font-bold text-gray-500 block ml-1 text-center">交付日期 Delivery Date *</label>
+        <input type="date" class="input-style required-field text-center focus:ring-2 focus:ring-brand-purple/20 bg-white/50">
+    </div>
+
+    <div class="h-px bg-brand-purple/10 w-full my-4"></div>
+
+    <div class="text-brand-purple">
+        <label class="text-sm font-bold text-gray-500 mb-3 block text-center">付款模式 *</label>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <label class="option-card flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:border-brand-purple/30 shadow-sm">
+                <input type="radio" name="paymentStructure" value="full" class="hidden" onchange="togglePaymentFields(false)">
+                <span class="text-base font-bold">全額付清</span>
+            </label>
+            <label class="option-card flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:border-brand-purple/30 shadow-sm">
+                <input type="radio" name="paymentStructure" value="deposit" class="hidden" onchange="togglePaymentFields(true)">
+                <span class="text-base font-bold">先付定金</span>
+            </label>
+        </div>
+
+        <div id="splitPaymentFields" class="hidden grid grid-cols-2 gap-4 animate-fade-in bg-white/50 p-4 rounded-2xl border border-white">
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-400 block text-center">定金</label>
+                <input type="tel" 
+                       id="depositInput" 
+                       inputmode="numeric" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+                       class="input-style text-center border-gray-200/80 font-mono text-lg font-bold" 
+                       placeholder="0">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-gray-400 block text-center">尾款</label>
+                <input type="tel" 
+                       id="balanceInput" 
+                       inputmode="numeric" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+                       class="input-style text-center border-gray-200/80 font-mono text-lg font-bold" 
+                       placeholder="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <label class="text-sm font-bold text-gray-500 mb-3 block text-center">支付方式 *</label>
+        <div class="grid grid-cols-2 gap-4 text-brand-text">
+            <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
+                <input type="checkbox" name="paymentMethod" value="cash" class="accent-brand-purple w-5 h-5"> 
+                <span class="text-sm font-bold">現金</span>
+            </label>
+            <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
+                <input type="checkbox" name="paymentMethod" value="transfer" class="accent-brand-purple w-5 h-5"> 
+                <span class="text-sm font-bold">轉帳</span>
+            </label>
+            <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
+                <input type="checkbox" name="paymentMethod" value="card_install" class="accent-brand-purple w-5 h-5"> 
+                <span class="text-sm font-bold">刷卡分期</span>
+            </label>
+            <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
+                <input type="checkbox" name="paymentMethod" value="no_card_install" class="accent-brand-purple w-5 h-5"> 
+                <span class="text-sm font-bold">無卡分期</span>
+            </label>
+            <label class="option-card col-span-2 flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
+                <input type="checkbox" name="paymentMethod" value="all_pay" class="accent-brand-purple w-5 h-5"> 
+                <span class="text-sm font-bold">全支付</span>
+            </label>
+        </div>
     </div>
 </div>
-                </div>
-
-                <div class="mt-6">
-                    <label class="text-sm font-bold text-gray-500 mb-3 block text-center">支付方式 *</label>
-                    <div class="grid grid-cols-2 gap-4 text-brand-text">
-                        <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
-                            <input type="checkbox" name="paymentMethod" value="cash" class="accent-brand-purple w-5 h-5"> <span class="text-sm font-bold">現金</span>
-                        </label>
-                        <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
-                            <input type="checkbox" name="paymentMethod" value="transfer" class="accent-brand-purple w-5 h-5"> <span class="text-sm font-bold">轉帳</span>
-                        </label>
-                        <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
-                            <input type="checkbox" name="paymentMethod" value="card_install" class="accent-brand-purple w-5 h-5"> <span class="text-sm font-bold">刷卡分期</span>
-                        </label>
-                        <label class="option-card flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
-                            <input type="checkbox" name="paymentMethod" value="no_card_install" class="accent-brand-purple w-5 h-5"> <span class="text-sm font-bold">無卡分期</span>
-                        </label>
-                         <label class="option-card col-span-2 flex items-center justify-center gap-2 p-4 bg-white rounded-xl border border-gray-200 cursor-pointer">
-                            <input type="checkbox" name="paymentMethod" value="all_pay" class="accent-brand-purple w-5 h-5"> <span class="text-sm font-bold">全支付</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
+                    
 
 <section class="glass-card p-0 overflow-hidden bg-white/80">
     <div class="p-5 border-b border-gray-100 bg-white/50 backdrop-blur-sm">
@@ -653,8 +678,11 @@ body {
         </div>
         
         <div class="glass-card p-0 overflow-hidden shadow-sm">
-            <img src="menu.jpg" alt="美容價目表" class="w-full h-auto object-cover block">
-        </div>
+<img src="menu.jpg" 
+     alt="美容價目表" 
+     loading="lazy"
+     class="w-full h-auto object-cover block">
+            </div>
 
         <section class="glass-card p-6 space-y-5 relative overflow-hidden border-l-4 border-l-brand-pink">
              <h3 class="text-sm font-black text-brand-pink uppercase tracking-wider flex items-center gap-2 relative z-10">
@@ -1418,26 +1446,82 @@ async function uploadSignature(folder, name, dataUrl) {
             required: (value) => !value || value.trim() === '' ? '此欄位為必填' : null
         };
 
-        function validateField(input) {
-            const value = input.value;
-            const placeholder = input.placeholder;
-            let error = null;
+function validateField(input) {
+    const value = input.value;
+    const placeholder = input.placeholder;
+    const inputId = input.id; // ✅ 新增：透過 ID 識別特殊欄位
+    let error = null;
 
-            if (placeholder.includes('姓名')) error = validators.name(value);
-            else if (input.type === 'tel') error = validators.phone(value);
-            else if (input.type === 'email') error = validators.email(value);
-            else if (placeholder.includes('身分證')) error = validators.idNumber(value);
-            else error = validators.required(value);
+    // ✅ 特殊處理：總價輸入框（只檢查是否為空，不驗證格式）
+    if (inputId === 'totalPrice') {
+        error = !value || value.trim() === '' ? '請輸入總價' : null;
+    }
+    // ✅ 特殊處理：定金/尾款（只檢查數字，不驗證格式）
+    else if (inputId === 'depositInput' || inputId === 'balanceInput') {
+        error = !value || value.trim() === '' ? '請輸入金額' : null;
+    }
+    // 原本的驗證邏輯
+    else if (placeholder.includes('姓名')) {
+        error = validators.name(value);
+    }
+    else if (input.type === 'tel' && placeholder.includes('09')) {
+        error = validators.phone(value);
+    }
+    else if (input.type === 'email') {
+        error = validators.email(value);
+    }
+    else if (placeholder.includes('身分證')) {
+        error = validators.idNumber(value);
+    }
+    else {
+        error = validators.required(value);
+    }
 
-            if (error) {
-                input.classList.add('input-error', 'shake');
-                setTimeout(() => input.classList.remove('shake'), 500);
-                return false;
-            } else {
-                input.classList.remove('input-error');
-                return true;
-            }
+    if (error) {
+        input.classList.add('input-error', 'shake');
+        setTimeout(() => input.classList.remove('shake'), 500);
+        return false;
+    } else {
+        input.classList.remove('input-error');
+        return true;
+    }
+}
+// ===== 日期格式化輔助函式 =====
+/**
+ * 將任意日期格式轉換為 YYYY-MM-DD
+ * @param {string} dateValue - 日期字串
+ * @returns {string|null} - 格式化後的日期或 null
+ */
+function formatDateToISO(dateValue) {
+    if (!dateValue) return null;
+    
+    try {
+        // 如果已經是 YYYY-MM-DD 格式，直接返回
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+            return dateValue;
         }
+        
+        // 嘗試解析其他格式
+        const date = new Date(dateValue);
+        
+        // 檢查是否為有效日期
+        if (isNaN(date.getTime())) {
+            console.warn('無效的日期格式:', dateValue);
+            return null;
+        }
+        
+        // 轉換為 YYYY-MM-DD
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    } catch (error) {
+        console.error('日期格式化錯誤:', error);
+        return null;
+    }
+}
+
 
 function setupRealtimeValidation() {
     document.querySelectorAll('.input-style').forEach(input => {
@@ -1449,26 +1533,38 @@ function setupRealtimeValidation() {
             if (input.value) input.classList.remove('input-error');
         });
 
-        // 3. 純數字輸入限制 (修正邏輯：移出 input 事件外)
-        if (input.inputMode === 'numeric') {
+        // 3. ✅ 純數字輸入限制（只針對 inputMode="numeric" 的欄位）
+        if (input.getAttribute('inputmode') === 'numeric') {
             input.addEventListener('input', (e) => {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
             });
         }
 
-        // 4. 手機號碼自動加 "-" (修正邏輯：確保在 forEach 迴圈內)
-        if (input.type === 'tel') {
+        // 4. ✅ 手機號碼自動格式化（只針對有 placeholder 包含 "09" 的電話欄位）
+        if (input.type === 'tel' && input.placeholder.includes('09')) {
             input.addEventListener('input', (e) => {
                 // 移除非數字字元
-                let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,3})(\d{0,3})/);
-                // 重新組裝格式 (09xx-xxx-xxx)
-                if (x) {
-                    e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '');
+                let cleaned = e.target.value.replace(/\D/g, '');
+                
+                // 限制最多 10 位數字
+                if (cleaned.length > 10) {
+                    cleaned = cleaned.substring(0, 10);
                 }
+                
+                // 格式化為 09xx-xxx-xxx
+                let formatted = cleaned;
+                if (cleaned.length > 4) {
+                    formatted = cleaned.substring(0, 4) + '-' + cleaned.substring(4);
+                }
+                if (cleaned.length > 7) {
+                    formatted = cleaned.substring(0, 4) + '-' + cleaned.substring(4, 7) + '-' + cleaned.substring(7);
+                }
+                
+                e.target.value = formatted;
             });
         }
-    });
-}
+    }); // ✅ 這裡是 forEach 的閉合
+} // ✅ 這裡是 setupRealtimeValidation() 的閉合
 
 
 
@@ -1951,29 +2047,52 @@ async function submitContract() {
 
     // === 1. 驗證邏輯 ===
     let errors = [];
+    
     document.querySelectorAll('#view-contract .required-field').forEach(el => {
-        if (!validateField(el) || !el.value) errors.push(el.placeholder || '必填欄位');
+        const isValid = validateField(el);
+        if (!isValid) {
+            const label = el.previousElementSibling?.innerText || el.placeholder || '必填欄位';
+            errors.push(label.replace('*', '').trim());
+        }
     });
+    
     const paymentStructure = document.querySelector('#view-contract input[name="paymentStructure"]:checked')?.value;
+    const depositInput = document.getElementById('depositInput');
+    const balanceInput = document.getElementById('balanceInput');
+    const totalPriceInput = document.getElementById('totalPrice');
+    
+    if (!paymentStructure) {
+        errors.push('付款模式');
+    }
+    
     if (paymentStructure === 'deposit') {
-        const depositInput = document.getElementById('depositInput');
-        const balanceInput = document.getElementById('balanceInput');
+        const totalPriceVal = parseInt(totalPriceInput.value) || 0;
+        const depositVal = parseInt(depositInput.value) || 0;
+        const balanceVal = parseInt(balanceInput.value) || 0;
         
-        if (!depositInput.value || parseInt(depositInput.value) <= 0) {
+        if (!depositInput.value || depositVal <= 0) {
             errors.push('定金金額');
             depositInput.classList.add('input-error', 'shake');
         } else {
             depositInput.classList.remove('input-error');
         }
-        if (!balanceInput.value || parseInt(balanceInput.value) <= 0) {
+        
+        if (!balanceInput.value || balanceVal <= 0) {
             errors.push('尾款金額');
             balanceInput.classList.add('input-error', 'shake');
         } else {
             balanceInput.classList.remove('input-error');
         }
+        
+        if (depositVal > 0 && balanceVal > 0 && (depositVal + balanceVal !== totalPriceVal)) {
+            errors.push('定金+尾款必須等於總價');
+            depositInput.classList.add('input-error', 'shake');
+            balanceInput.classList.add('input-error', 'shake');
+            showToast(`定金 $${depositVal} + 尾款 $${balanceVal} ≠ 總價 $${totalPriceVal}`, 'error', 4000);
+        }
     }
+    
     if (!document.querySelector('#view-contract input[name="petSex"]:checked')) errors.push('寵物性別');
-    if (!document.querySelector('#view-contract input[name="paymentStructure"]:checked')) errors.push('付款模式');
     if (document.querySelectorAll('#view-contract input[name="paymentMethod"]:checked').length === 0) errors.push('支付方式');
     
     if (document.getElementById('img-buyer').classList.contains('hidden')) errors.push('買方簽名');
@@ -1997,29 +2116,35 @@ async function submitContract() {
     lucide.createIcons();
 
     try {
+        // ✅ 優化：使用輔助函式抓取並格式化日期
         const buyerName = document.querySelector('#view-contract input[placeholder="請輸入真實姓名"]').value;
         const buyerPhone = document.querySelector('#view-contract input[placeholder="09xx-xxx-xxx"]').value;
         const buyerId = document.querySelector('#view-contract input[placeholder="請輸入身分證字號"]').value;
         const buyerAddress = document.querySelector('#view-contract input[placeholder="請輸入完整地址"]').value;
-        const buyerBirth = document.querySelector('#view-contract input[type="date"]').value;
+        
+        // ✅ 日期格式化（確保為 YYYY-MM-DD）
+        const buyerBirth = formatDateToISO(document.querySelector('#view-contract input[type="date"]').value);
 
         const petType = document.querySelector('#view-contract input[name="petType"]:checked')?.value || '貓';
         const petSex = document.querySelector('#view-contract input[name="petSex"]:checked')?.value;
         const petBreed = document.querySelector('#view-contract input[placeholder="例：英國短毛貓"]').value;
         const petColor = document.querySelector('#view-contract input[placeholder="例：藍色"]').value;
-        const petBirth = document.querySelectorAll('#view-contract input[type="date"]')[1]?.value;
-        const deliveryDate = document.querySelectorAll('#view-contract input[type="date"]')[2]?.value;
-        const depositAmount = document.getElementById('depositInput').value;
-        const balanceAmount = document.getElementById('balanceInput').value;
+        
+        // ✅ 日期格式化
+        const petBirth = formatDateToISO(document.querySelectorAll('#view-contract input[type="date"]')[1]?.value);
+        const deliveryDate = formatDateToISO(document.querySelectorAll('#view-contract input[type="date"]')[2]?.value);
+        
+        const depositAmount = depositInput.value || null;
+        const balanceAmount = balanceInput.value || null;
 
         const paymentMethods = Array.from(document.querySelectorAll('#view-contract input[name="paymentMethod"]:checked'))
                                     .map(el => el.value).join(',');
-        const totalPrice = document.getElementById('totalPrice').value || 0;
+        const totalPrice = totalPriceInput.value || 0;
 
         const signatureDataUrl = document.getElementById('img-buyer').src;
         const signatureUrl = await uploadSignature('sales', buyerName, signatureDataUrl);
 
-        // ✅ 修正：使用 _supabase
+        // ✅ 寫入資料庫
         const { error } = await _supabase
             .from('sales_contracts')
             .insert({
@@ -2036,6 +2161,7 @@ async function submitContract() {
                 delivery_date: deliveryDate,
                 deposit_amount: depositAmount,
                 balance_amount: balanceAmount,
+                payment_structure: paymentStructure,
                 total_price: totalPrice,
                 payment_method: paymentMethods,
                 signature_url: signatureUrl,
@@ -2048,7 +2174,7 @@ async function submitContract() {
         setTimeout(() => router('home'), 1500);
 
     } catch (err) {
-        console.error(err);
+        console.error('上傳錯誤詳情:', err);
         showToast('上傳失敗：' + err.message, 'error');
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -2057,6 +2183,7 @@ async function submitContract() {
         isSubmitting = false;
     }
 }
+
 
 
 // --- 送出邏輯 (美容) ---

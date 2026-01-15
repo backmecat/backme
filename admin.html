@@ -329,7 +329,7 @@ const FIELD_SCHEMAS = {
         { key: 'delivery_date', label: '交付日期', inputType: 'date' }, 
         { key: 'deposit_amount', label: '訂金', inputType: 'number' }, 
         { key: 'balance_amount', label: '尾款', inputType: 'number' }, 
-        { key: 'payment_method', label: '支付方式' }, 
+        { key: 'payment_method', label: '支付方式', type: 'payment' }, 
         { key: 'created_at', label: '建立時間', readonly: true }, 
         { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true } 
     ],
@@ -370,6 +370,31 @@ async function checkSession() {
         loadData('sales'); 
     }
 }
+
+// ===== 支付方式中英文對應表 =====
+const PAYMENT_METHOD_MAP = {
+    'cash': '現金',
+    'transfer': '轉帳',
+    'card_install': '刷卡分期',
+    'no_card_install': '無卡分期',
+    'all_pay': '全支付'
+};
+
+/**
+ * 將英文代碼轉換為中文標籤
+ * @param {string} methodString - 例如 "cash,transfer"
+ * @returns {string} - 例如 "現金, 轉帳"
+ */
+function formatPaymentMethod(methodString) {
+    if (!methodString) return '(未填寫)';
+    
+    return methodString
+        .split(',')
+        .map(code => PAYMENT_METHOD_MAP[code.trim()] || code.trim())
+        .join(', ');
+}
+
+
 checkSession();
 
 const searchInput = document.getElementById('search-input');
@@ -645,6 +670,12 @@ function openModal(index) {
     schema.forEach(field => {
         let value = currentItem[field.key];
         if (field.key === 'created_at' && value) value = formatTaiwanTime(value);
+        
+        // ✅ 新增：支付方式特殊處理
+        if (field.type === 'payment' && value) {
+            value = formatPaymentMethod(value);
+        }
+        
         if (value === null || typeof value === 'undefined' || value === '') value = '(未填寫)';
 
         if (field.type === 'image') { 
@@ -662,7 +693,20 @@ function openModal(index) {
                 <textarea data-key="${field.key}" disabled 
                     class="editable-field w-full p-3 rounded-xl border bg-gray-50 text-gray-700 font-medium resize-none h-24 focus:bg-white focus:ring-2 focus:ring-[#D4B5A0] outline-none transition-all">${value}</textarea>
             </div>`; 
-        } else { 
+        } 
+        // ✅ 新增：支付方式特殊渲染（只讀顯示）
+        else if (field.type === 'payment') {
+            html += `
+            <div>
+                <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
+                <div class="w-full p-3 rounded-xl border bg-gray-100/50 text-gray-700 font-medium flex flex-wrap gap-2">
+                    ${value.split(', ').map(method => 
+                        `<span class="px-3 py-1 bg-white rounded-full text-sm font-bold text-[#6D7DBF] border border-[#6D7DBF]/20">${method}</span>`
+                    ).join('')}
+                </div>
+            </div>`;
+        }
+        else { 
             const isReadOnly = field.readonly ? 'readonly-field' : 'editable-field'; 
             const bgClass = field.readonly ? 'bg-gray-100/50 text-gray-400' : 'bg-gray-50 text-gray-700';
             const inputType = field.inputType || 'text';
