@@ -338,47 +338,88 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FIELD_SCHEMAS = {
-    sales: [ 
-        { key: 'buyer_name', label: '買方姓名' }, 
-        { key: 'buyer_phone', label: '買方電話', inputType: 'tel' },
-        { key: 'buyer_id_number', label: '身分證字號' }, 
-        { key: 'buyer_address', label: '通訊地址' }, 
-        { key: 'buyer_birthday', label: '出生日期', inputType: 'date' }, 
-        { key: 'pet_type', label: '寵物種類' }, 
-        { key: 'pet_sex', label: '性別' }, 
-        { key: 'pet_breed', label: '寵物品種' }, 
-        { key: 'pet_color', label: '毛色' }, 
-        { key: 'pet_birthday', label: '寵物生日', inputType: 'date' }, 
-        { key: 'total_price', label: '總價', inputType: 'number' },
-        { key: 'delivery_date', label: '交付日期', inputType: 'date' }, 
-        { key: 'deposit_amount', label: '訂金', inputType: 'number' }, 
-        { key: 'balance_amount', label: '尾款', inputType: 'number' }, 
-        { key: 'payment_method', label: '支付方式', type: 'payment' }, 
-        { key: 'created_at', label: '建立時間', readonly: true }, 
-        { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true } 
+    sales: [
+        {
+            title: '👤 買方資料 (乙方)',
+            fields: [
+                { key: 'buyer_name', label: '姓名', cols: 1 },
+                { key: 'buyer_phone', label: '電話', inputType: 'tel', cols: 1 },
+                { key: 'buyer_id_number', label: '身分證字號', cols: 1 },
+                { key: 'buyer_birthday', label: '出生日期', inputType: 'date', cols: 1 },
+                { key: 'buyer_email', label: 'Email', inputType: 'email', cols: 2 },
+                { key: 'buyer_address', label: '通訊地址', cols: 2 }
+            ]
+        },
+        {
+            title: '🐾 寵物資訊',
+            fields: [
+                { key: 'pet_type', label: '種類', cols: 1 },
+                { key: 'pet_sex', label: '性別', cols: 1 },
+                { key: 'pet_breed', label: '品種', cols: 1 },
+                { key: 'pet_color', label: '毛色', cols: 1 },
+                { key: 'pet_birthday', label: '出生日期', inputType: 'date', cols: 1 },
+                { key: 'delivery_date', label: '交付日期', inputType: 'date', cols: 1 }
+            ]
+        },
+        {
+            title: '💰 交易金額',
+            fields: [
+                { key: 'total_price', label: '總價', inputType: 'number', cols: 2 },
+                { key: 'deposit_amount', label: '訂金', inputType: 'number', cols: 1 },
+                { key: 'balance_amount', label: '尾款', inputType: 'number', cols: 1 },
+                { key: 'payment_method', label: '支付方式', type: 'payment', cols: 2 }
+            ]
+        },
+        {
+            title: '📄 其他資訊',
+            fields: [
+                { key: 'created_at', label: '建立時間', readonly: true, cols: 2 },
+                { key: 'signature_url', label: '電子簽名', type: 'image', readonly: true, cols: 2 }
+            ]
+        }
     ],
-    grooming: [ 
-        { key: 'owner_name', label: '飼主姓名' }, 
-        { key: 'owner_phone', label: '飼主電話', inputType: 'tel' }, 
-        { key: 'owner_email', label: 'Email', inputType: 'email' }, 
-        { key: 'owner_id', label: '身分證字號' }, 
-        { key: 'owner_address', label: '地址' }, 
-        { key: 'emergency_contact', label: '緊急聯絡人' }, 
-        { key: 'emergency_phone', label: '緊急電話', inputType: 'tel' }, 
-        { key: 'pet_name', label: '寵物名字' }, 
-        { key: 'pet_breed', label: '品種' }, 
-        { key: 'pet_weight', label: '體重 (kg)', inputType: 'number' }, 
-    { key: 'pet_age', label: '年齡', type: 'age_display' }, 
-        { key: 'pet_sex', label: '性別' }, 
-        { key: 'pet_neuter', label: '結紮狀況' }, 
-        { key: 'pet_chip', label: '晶片資訊' }, 
-        { key: 'preferred_clinic', label: '指定醫院' }, 
-        { key: 'history_notes', label: '過往病史', type: 'textarea' }, 
-        { key: 'service_type', label: '主要服務' }, 
-        { key: 'total_price', label: '總金額', inputType: 'number' }, 
-        { key: 'service_details', label: '服務項目詳情', type: 'textarea' }, 
-        { key: 'created_at', label: '建立時間', readonly: true }, 
-        { key: 'signature_url', label: '簽名檔', type: 'image', readonly: true } 
+    grooming: [
+        {
+            title: '👤 飼主資料 (甲方)',
+            fields: [
+                { key: 'owner_name', label: '姓名', cols: 1 },
+                { key: 'owner_phone', label: '電話', inputType: 'tel', cols: 1 },
+                { key: 'owner_id', label: '身分證字號', cols: 1 },
+                { key: 'owner_email', label: 'Email', inputType: 'email', cols: 1 },
+                { key: 'owner_address', label: '地址', cols: 2 },
+                { key: 'emergency_contact', label: '緊急聯絡人', cols: 1 },
+                { key: 'emergency_phone', label: '緊急電話', inputType: 'tel', cols: 1 }
+            ]
+        },
+        {
+            title: '🐱 寵物資訊',
+            fields: [
+                { key: 'pet_name', label: '名字', cols: 1 },
+                { key: 'pet_breed', label: '品種', cols: 1 },
+                { key: 'pet_sex', label: '性別', cols: 1 },
+                { key: 'pet_neuter', label: '結紮', cols: 1 },
+                { key: 'pet_weight', label: '體重 (kg)', inputType: 'number', cols: 1 },
+                { key: 'pet_age', label: '年齡', type: 'age_display', cols: 1 },
+                { key: 'pet_chip', label: '晶片資訊', cols: 2 },
+                { key: 'preferred_clinic', label: '指定醫院', cols: 2 },
+                { key: 'history_notes', label: '過往病史', type: 'textarea', cols: 2 }
+            ]
+        },
+        {
+            title: '✂️ 服務內容',
+            fields: [
+                { key: 'service_type', label: '主服務', cols: 2 },
+                { key: 'service_details', label: '服務細項', type: 'service_details', cols: 2 },
+                { key: 'total_price', label: '總金額', inputType: 'number', cols: 2 }
+            ]
+        },
+        {
+            title: '📄 其他資訊',
+            fields: [
+                { key: 'created_at', label: '建立時間', readonly: true, cols: 2 },
+                { key: 'signature_url', label: '電子簽名', type: 'image', readonly: true, cols: 2 }
+            ]
+        }
     ]
 };
 
@@ -695,80 +736,114 @@ const modalPanel = document.getElementById('modal-panel');
 
 function openModal(index) {
     currentItem = window.fullDataList[index]; 
-    const schema = FIELD_SCHEMAS[currentTab];
+    const sections = FIELD_SCHEMAS[currentTab];
     const contentDiv = document.getElementById('modal-content');
     
+    // 重置按鈕狀態
     document.getElementById('btn-edit').classList.remove('hidden');
     document.getElementById('btn-save').classList.add('hidden');
     
-    let html = '<div class="space-y-4">';
+    let html = '<div class="space-y-8">';
     
-    schema.forEach(field => {
-        let value = currentItem[field.key];
-        if (field.key === 'created_at' && value) value = formatTaiwanTime(value);
-        
-        // ✅ 新增：支付方式特殊處理
-        if (field.type === 'payment' && value) {
-            value = formatPaymentMethod(value);
-        }
-            // ✅ [新增] 年齡顯示邏輯
-    if (field.type === 'age_display') {
-        const rawData = currentItem.raw_data || currentItem;
-        if (rawData.is_under_one && rawData.age_months) {
-            value = `${rawData.age_months} 個月（未滿一歲）`;
-        } else if (rawData.age) {
-            value = `${rawData.age} 歲`;
-        } else {
-            value = '(未填寫)';
-        }
-    }
-    
-        if (value === null || typeof value === 'undefined' || value === '') value = '(未填寫)';
+    sections.forEach(section => {
+        // 區塊標題
+        html += `
+        <div class="bg-white/50 rounded-3xl border border-white shadow-sm overflow-hidden">
+            <div class="px-6 py-3 bg-[#FAF5F0] border-b border-[#EFE6DD]">
+                <h3 class="font-bold text-[#5D5046] text-base flex items-center gap-2">
+                    ${section.title}
+                </h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+        `;
 
-        if (field.type === 'image') { 
-            html += `
-            <div class="mt-4">
-                <label class="block text-xs font-bold text-gray-400 mb-2 flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> ${field.label}</label>
-                <div class="border-2 border-dashed border-gray-200 rounded-xl p-2 bg-gray-50">
-                    <img src="${value}" class="max-h-40 mx-auto object-contain" onerror="this.style.display='none'">
-                </div>
-            </div>`; 
-        } else if (field.type === 'textarea') { 
-            html += `
-            <div>
-                <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
-                <textarea data-key="${field.key}" disabled 
-                    class="editable-field w-full p-3 rounded-xl border bg-gray-50 text-gray-700 font-medium resize-none h-24 focus:bg-white focus:ring-2 focus:ring-[#D4B5A0] outline-none transition-all">${value}</textarea>
-            </div>`; 
-        } 
-        // ✅ 新增：支付方式特殊渲染（只讀顯示）
-        else if (field.type === 'payment') {
-            html += `
-            <div>
-                <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
-                <div class="w-full p-3 rounded-xl border bg-gray-100/50 text-gray-700 font-medium flex flex-wrap gap-2">
-                    ${value.split(', ').map(method => 
-                        `<span class="px-3 py-1 bg-white rounded-full text-sm font-bold text-[#6D7DBF] border border-[#6D7DBF]/20">${method}</span>`
-                    ).join('')}
-                </div>
-            </div>`;
-        }
-        else { 
-            const isReadOnly = field.readonly ? 'readonly-field' : 'editable-field'; 
-            const bgClass = field.readonly ? 'bg-gray-100/50 text-gray-400' : 'bg-gray-50 text-gray-700';
-            const inputType = field.inputType || 'text';
+        section.fields.forEach(field => {
+            let value = currentItem[field.key];
+            if (field.key === 'created_at' && value) value = formatTaiwanTime(value);
             
-            html += `
-            <div>
-                <label class="block text-xs font-bold text-gray-400 mb-1">${field.label}</label>
-                <input type="${inputType}" data-key="${field.key}" value="${value}" disabled 
-                    class="${isReadOnly} ${bgClass} w-full p-3 rounded-xl border font-medium focus:bg-white focus:ring-2 focus:ring-[#D4B5A0] outline-none transition-all appearance-none">
-            </div>`; 
-        }
+            // 特殊欄位處理
+            if (field.type === 'payment' && value) value = formatPaymentMethod(value);
+            if (field.type === 'age_display') {
+                const rawData = currentItem.raw_data || currentItem;
+                if (rawData.is_under_one && rawData.age_months) value = `${rawData.age_months} 個月`;
+                else if (rawData.age) value = `${rawData.age} 歲`;
+                else value = '';
+            }
+            
+            if (value === null || typeof value === 'undefined') value = '';
+
+            const colSpan = field.cols === 2 ? 'md:col-span-2' : '';
+            const labelHtml = `<label class="block text-xs font-bold text-gray-400 mb-1.5 ml-1">${field.label}</label>`;
+
+            html += `<div class="${colSpan}">`;
+
+            // === 1. 圖片 (簽名) ===
+            if (field.type === 'image') {
+                html += `
+                    ${labelHtml}
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50/50 flex justify-center">
+                        <img src="${value}" class="max-h-32 object-contain" onerror="this.style.display='none'">
+                    </div>`;
+            } 
+            // === 2. 服務詳情 (標籤 + 編輯區) ===
+            else if (field.type === 'service_details') {
+                const items = value.split(/[,、]/).map(s => s.trim()).filter(s => s);
+                const tagsHtml = items.map(item => `
+                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-white border border-pink-200 text-pink-600 shadow-sm whitespace-nowrap mb-2 mr-2">
+                        ${item}
+                    </span>
+                `).join('');
+                
+                html += `
+                    ${labelHtml}
+                    <div class="view-mode-group w-full p-4 rounded-xl border border-gray-100 bg-pink-50/30 min-h-[60px]">
+                        ${tagsHtml || '<span class="text-gray-400 text-xs">無內容</span>'}
+                    </div>
+                    <textarea data-key="${field.key}" class="edit-mode-group editable-field hidden w-full p-3 rounded-xl border border-[#D4B5A0] bg-white text-gray-700 font-medium resize-none h-32 focus:ring-2 focus:ring-[#D4B5A0]/50 outline-none">${value}</textarea>
+                `;
+            }
+            // === 3. 長文字 (病史等) ===
+            else if (field.type === 'textarea') {
+                html += `
+                    ${labelHtml}
+                    <div class="view-mode-group w-full p-3 rounded-xl border border-gray-100 bg-gray-50/50 text-gray-700 font-medium text-sm min-h-[48px]">
+                        ${value || '-'}
+                    </div>
+                    <textarea data-key="${field.key}" class="edit-mode-group editable-field hidden w-full p-3 rounded-xl border border-[#D4B5A0] bg-white text-gray-700 font-medium resize-none h-24 focus:ring-2 focus:ring-[#D4B5A0]/50 outline-none">${value}</textarea>
+                `;
+            }
+            // === 4. 一般欄位 ===
+            else {
+                const isReadOnly = field.readonly ? 'readonly' : '';
+                const bgClass = field.readonly ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-50 text-gray-700';
+                
+                // 為了讓編輯體驗更好，我們使用一個 div 來顯示(檢視模式)，一個 input 來編輯(編輯模式)
+                if (field.readonly) {
+                     html += `
+                        ${labelHtml}
+                        <div class="w-full p-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 font-medium text-sm">
+                            ${value || '-'}
+                        </div>`;
+                } else {
+                    html += `
+                        ${labelHtml}
+                        <div class="view-mode-group w-full p-3 rounded-xl border border-gray-100 bg-gray-50/50 text-gray-700 font-medium text-sm min-h-[46px] flex items-center">
+                            ${value || '-'}
+                        </div>
+                        <input type="${field.inputType || 'text'}" data-key="${field.key}" value="${value}" 
+                            class="edit-mode-group editable-field hidden w-full p-3 rounded-xl border border-[#D4B5A0] bg-white text-gray-700 font-medium focus:ring-2 focus:ring-[#D4B5A0]/50 outline-none transition-all">
+                    `;
+                }
+            }
+            html += `</div>`;
+        });
+        html += `</div></div>`;
     });
+    
     html += '</div>';
     contentDiv.innerHTML = html;
     
+    // 動畫顯示
     modal.classList.remove('hidden');
     setTimeout(() => { 
         modal.classList.remove('opacity-0'); 
@@ -808,38 +883,53 @@ async function deleteCurrentItem() {
 }
 
 function enableEdit() {
+    // 1. 切換按鈕
     document.getElementById('btn-edit').classList.add('hidden');
     document.getElementById('btn-save').classList.remove('hidden');
-    document.querySelectorAll('.editable-field').forEach(input => {
-        input.disabled = false;
-        input.classList.remove('bg-gray-50');
-        input.classList.add('bg-white', 'border-[#D4B5A0]', 'ring-2', 'ring-[#D4B5A0]/20');
-        if (input.value === '(未填寫)') input.value = '';
+    
+    // 2. 隱藏檢視元件
+    document.querySelectorAll('.view-mode-group').forEach(el => {
+        el.classList.add('hidden');
     });
+
+    // 3. 顯示並啟用編輯元件
+    document.querySelectorAll('.edit-mode-group').forEach(input => {
+        input.classList.remove('hidden'); // 解除隱藏
+        input.disabled = false;
+    });
+    
+    showToast('已進入編輯模式', 'success');
 }
 
 async function saveChanges() {
     const updates = {};
+    
+    // 抓取所有有 editable-field class 的輸入框值
     document.querySelectorAll('.editable-field').forEach(input => {
         const key = input.getAttribute('data-key');
-        updates[key] = input.value;
+        if (key) {
+            updates[key] = input.value;
+        }
     });
+
     const table = currentTab === 'sales' ? 'sales_contracts' : 'grooming_contracts';
     const btn = document.getElementById('btn-save');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<i data-lucide="loader" class="animate-spin w-4 h-4"></i>';
+    
+    btn.innerHTML = '<i data-lucide="loader" class="animate-spin w-4 h-4"></i> 儲存中';
     btn.disabled = true;
     lucide.createIcons();
 
     const { error } = await _supabase.from(table).update(updates).eq('id', currentItem.id);
+    
     if (error) {
-        showToast('儲存失敗', 'error');
+        showToast('儲存失敗: ' + error.message, 'error');
         btn.innerHTML = originalText;
         btn.disabled = false;
     } else {
         showToast('儲存成功！', 'success');
         closeModal();
-        loadData(currentTab);
+        loadData(currentTab); // 重新載入列表以顯示最新資料
     }
 }
 

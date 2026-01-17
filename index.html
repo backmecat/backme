@@ -393,6 +393,11 @@ body {
                     <label class="text-sm font-bold text-gray-500 block ml-1">出生日期 *</label>
                     <input type="date" class="input-style required-field focus:ring-2 focus:ring-brand-purple/20">
                 </div>
+
+                <div class="md:col-span-2 space-y-2">
+    <label class="text-sm font-bold text-gray-500 block ml-1">電子郵件 *</label>
+    <input type="email" class="input-style required-field focus:ring-2 focus:ring-brand-purple/20" placeholder="example@email.com">
+</div>
             </div>
         </section>
 
@@ -1093,7 +1098,7 @@ body {
                         <div class="flex items-center justify-between bg-white/60 p-3 rounded-xl">
                             <label class="flex items-center gap-3 cursor-pointer">
                                 <input type="checkbox" value="250" class="calc-check accent-red-500 w-5 h-5" onchange="calculateTotal()"> 
-                                <span class="text-sm font-bold text-gray-700">體重 6kg(含)以上</span>
+                                <span class="text-sm font-bold text-gray-700">體重 6kg(含)以上(+250)</span>
                             </label>
                             <span class="text-sm font-bold text-red-500">+250</span>
                         </div>
@@ -2073,7 +2078,258 @@ function closeSignatureModal() {
                 optWash.classList.add('hidden');
             }
         }
+// === Email 範本產生器 (買賣契約 - 完整專業版) ===
+function getSalesEmailHtml(data) {
+    // 支付方式翻譯對照
+    const paymentMap = {
+        'cash': '現金', 'transfer': '轉帳', 
+        'card_install': '刷卡分期', 'no_card_install': '無卡分期', 'all_pay': '全支付'
+    };
+    const paymentText = data.payment_method.split(',').map(p => paymentMap[p.trim()] || p).join('、');
 
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Helvetica', 'Arial', sans-serif; background-color: #F8F9FA; margin: 0; padding: 0; color: #5D5046; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(109, 125, 191, 0.15); }
+            .header { background-color: #6D7DBF; padding: 35px 20px; text-align: center; color: white; }
+            .section { padding: 25px; border-bottom: 1px dashed #eee; }
+            .section-title { color: #6D7DBF; margin-top: 0; font-size: 16px; border-left: 4px solid #6D7DBF; padding-left: 10px; margin-bottom: 15px; font-weight: bold; }
+            .label { color: #888; font-size: 12px; margin-bottom: 4px; display: block; }
+            .value { color: #5D5046; font-size: 15px; font-weight: bold; margin-bottom: 15px; display: block; word-break: break-all; }
+            .price-box { background-color: #F8F9FE; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #E0E4F2; margin-top: 10px; }
+            .price-total { color: #6D7DBF; font-size: 32px; font-weight: 900; line-height: 1.2; }
+            .deposit-info { font-size: 13px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px solid #dce2f2; display: flex; justify-content: space-around; }
+            .contract-text { font-size: 12px; color: #666; line-height: 1.7; background: #fafafa; padding: 20px; border-radius: 8px; text-align: justify; }
+            .contract-text strong { color: #444; display: block; margin-top: 10px; margin-bottom: 4px; }
+            .vendor-info { background-color: #F8F9FE; padding: 15px; border-radius: 8px; font-size: 13px; border: 1px solid #E0E4F2; }
+            .footer { background-color: #5D5046; color: #aaa; text-align: center; padding: 20px; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1 style="margin:0; font-size: 24px; letter-spacing: 1px;">📝 寵物買賣契約書</h1>
+                <p style="margin:5px 0 0 0; opacity: 0.8; font-size: 14px;">Backme Cattery Sales Contract</p>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">🏠 賣方資訊 (甲方)</h3>
+                <div class="vendor-info">
+                    <p style="margin:5px 0;"><strong>店家名稱：</strong>貝可米努奶喵館</p>
+                    <p style="margin:5px 0;"><strong>負責人：</strong>周凡尊</p>
+                    <p style="margin:5px 0;"><strong>統一編號：</strong>87194637</p>
+                    <p style="margin:5px 0;"><strong>聯絡電話：</strong>0988-733-384 / 0906-831-591</p>
+                    <p style="margin:5px 0;"><strong>營業地址：</strong>台中市西屯區福星路324-1號1樓</p>
+                    <p style="margin:5px 0;"><strong>許可證字號：</strong><br>台中店特寵字號第S1140057號<br>彰化店特寵字號第G1140016號</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">👤 買方資訊 (乙方)</h3>
+                <div style="display: flex; flex-wrap: wrap;">
+                    <div style="width: 50%;"><span class="label">姓名</span><span class="value">${data.buyer_name}</span></div>
+                    <div style="width: 50%;"><span class="label">電話</span><span class="value">${data.buyer_phone}</span></div>
+                    <div style="width: 50%;"><span class="label">身分證字號</span><span class="value">${data.buyer_id_number}</span></div>
+                    <div style="width: 50%;"><span class="label">出生日期</span><span class="value">${data.buyer_birthday}</span></div>
+                    <div style="width: 100%;"><span class="label">電子郵件</span><span class="value">${data.buyer_email}</span></div>
+                    <div style="width: 100%;"><span class="label">通訊地址</span><span class="value">${data.buyer_address}</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">🐾 寵物資訊</h3>
+                <div style="display: flex; flex-wrap: wrap;">
+                    <div style="width: 50%;"><span class="label">品種</span><span class="value">${data.pet_breed}</span></div>
+                    <div style="width: 50%;"><span class="label">性別</span><span class="value">${data.pet_sex}</span></div>
+                    <div style="width: 50%;"><span class="label">毛色</span><span class="value">${data.pet_color}</span></div>
+                    <div style="width: 50%;"><span class="label">種類</span><span class="value">${data.pet_type}</span></div>
+                    <div style="width: 100%;"><span class="label">出生日期</span><span class="value">${data.pet_birthday}</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">💰 交易與付款詳情</h3>
+                <div class="price-box">
+                    <span class="label">契約總金額</span>
+                    <span class="price-total">NT$ ${data.total_price}</span>
+                    
+                    ${data.payment_structure === 'deposit' ? `
+                    <div class="deposit-info">
+                        <span>訂金：$${data.deposit_amount}</span>
+                        <span>尾款：$${data.balance_amount}</span>
+                    </div>` : ''}
+                </div>
+                <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+                    <div><span class="label">付款方式</span><span class="value">${paymentText}</span></div>
+                    <div style="text-align: right;"><span class="label">交付日期</span><span class="value">${data.delivery_date}</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">📜 契約條款內容</h3>
+                <div class="contract-text">
+                    <p><strong>第一條：買賣標的</strong>甲乙雙方買賣之特定寵物為動物保護法第3條第5款之所指犬、貓。</p>
+                    <p><strong>第二條：買賣價金及契約效力</strong>買賣總價款及支付方式如前述。自乙方完成交付標的物並由甲方付訖價金後，所有權轉移生效。乙方如支付定金，在未完成餘款交付前，如寵物染病或死亡，甲方應盡告知義務並退還定金或更換。</p>
+                    <p><strong>第三條：寵物責任擔保條款</strong>
+                    1. 48小時內：如診斷患有發高燒、持續性下痢或嘔吐、肺炎病症，甲方應無條件收回，並更換同等值幼貓。<br>
+                    2. 7天內：如罹患出血性腸炎、冠狀病毒性腸炎及傳染性腹膜炎疾病，甲方應無條件收回並更換同等值幼貓。<br>
+                    3. 15天內：如罹患狂犬病、犬瘟熱，甲方應無條件收回並更換同等值幼貓。<br>
+                    4. 180天內：經診斷證明患有先天性或遺傳性癲癇、髖關節疾病、心臟、青光眼或耳聾疾病，甲方應更換同等值幼貓予乙方。</p>
+                    <p><strong>第四條：責任除外條款</strong>凡屬天然災害、意外傷害、及其他不可抗力或因飼養不當人為因素所造成之標的寵物死亡或疾病，不適用於本契約所訂之責任擔保範圍內。</p>
+                    <p><strong>第五條：遲延責任</strong>乙方應按時給付價金，如有遲延，經甲方催告仍不履行時，甲方得解除本契約，沒收已付之價金及標的寵物。</p>
+                    <p><strong>第六條：給付不能</strong>因不可歸責於雙方事由致甲方給付不能，甲方應返還價金及利息。</p>
+                    <p><strong>第七條：契約之解除</strong>乙方支付定金後不願買受，得拋棄定金解除契約。甲方不願出售時，得加倍返還定金解除契約。</p>
+                    <p><strong>第八條：未盡事項</strong>本契約未盡事宜，依民法及相關法令與誠信原則辦理。</p>
+                    <p><strong>第九條：爭議調解及合意管轄</strong>雙方同意以台中市地方法院為第一審管轄法院。</p>
+                    <p><strong>附約：</strong>如貓咪經獸醫檢查有冠狀病毒但貓咪未發病，不得要求甲方退還售金或任何賠償。下定後甲方不接受乙方因任何個人因素退定或換貓。</p>
+                </div>
+            </div>
+
+            <div class="section" style="text-align: center;">
+                <span class="label">買方 (乙方) 簽署</span>
+                <img src="${data.signature_url}" style="max-height: 100px; margin-top: 10px; border-bottom: 2px solid #eee;">
+                <p style="font-size: 10px; color: #ccc;">簽署日期：${new Date().toLocaleDateString()}</p>
+            </div>
+
+            <div class="footer">
+                <p>貝可米努奶喵館 Backme Cattery</p>
+                <p>台中市西屯區福星路324-1號1樓 | 0988-733-384</p>
+                <p style="font-size:10px; margin-top:5px;">此信件為系統自動發送，請勿直接回覆</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+// === Email 範本產生器 (美容契約 - 完整版) ===
+function getGroomingEmailHtml(data) {
+    // 1. 美化標籤邏輯
+    const items = data.service_details.split(/[,、]/).map(s => s.trim()).filter(s => s);
+    const tagsHtml = items.map(item => `
+        <span style="display:inline-block; background:#fff0f3; border:1px solid #fbcfe8; border-radius:12px; padding:4px 10px; margin:3px; font-size:12px; color:#db2777; font-weight:bold;">
+            ${item}
+        </span>
+    `).join('');
+
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Helvetica', 'Arial', sans-serif; background-color: #FFF8F0; margin: 0; padding: 0; color: #5D5046; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(224, 137, 155, 0.15); }
+            .header { background-color: #E0899B; padding: 30px; text-align: center; color: white; }
+            .section { padding: 25px; border-bottom: 1px dashed #eee; }
+            .section-title { color: #E0899B; margin-top: 0; font-size: 16px; border-left: 4px solid #E0899B; padding-left: 10px; margin-bottom: 15px; }
+            .label { color: #888; font-size: 12px; margin-bottom: 4px; display: block; }
+            .value { color: #5D5046; font-size: 15px; font-weight: bold; margin-bottom: 15px; display: block; word-break: break-all; }
+            .price-box { background-color: #FFF0F3; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #FAD1DC; margin-top: 10px; }
+            .price-total { color: #E0899B; font-size: 28px; font-weight: 900; }
+            .footer { background-color: #5D5046; color: #aaa; text-align: center; padding: 20px; font-size: 12px; }
+            .contract-text { font-size: 12px; color: #666; line-height: 1.6; background: #fafafa; padding: 15px; border-radius: 8px; }
+            .vendor-info { background-color: #fff5f7; padding: 15px; border-radius: 8px; font-size: 13px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1 style="margin:0; font-size: 24px;">✂️ 寵物美容服務契約</h1>
+                <p style="margin:5px 0 0 0; opacity: 0.8; font-size: 14px;">Backme Grooming Service Contract</p>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">🏠 乙方 (業者資訊)</h3>
+                <div class="vendor-info">
+                    <p style="margin:5px 0;"><strong>店家名稱：</strong>貝可米努奶喵館</p>
+                    <p style="margin:5px 0;"><strong>負責人：</strong>周凡尊</p>
+                    <p style="margin:5px 0;"><strong>聯絡電話：</strong>0988-733-384 / 0906-831-591</p>
+                    <p style="margin:5px 0;"><strong>營業地址：</strong>台中市西屯區福星路324-1號1樓</p>
+                    <p style="margin:5px 0;"><strong>營業時間：</strong>採預約制</p>
+                    <p style="margin:5px 0;"><strong>緊急特約醫院：</strong>天興動物醫院</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">👤 甲方 (飼主資料)</h3>
+                <div style="display: flex; flex-wrap: wrap;">
+                    <div style="width: 50%;"><span class="label">姓名</span><span class="value">${data.owner_name}</span></div>
+                    <div style="width: 50%;"><span class="label">電話</span><span class="value">${data.owner_phone}</span></div>
+                    <div style="width: 50%;"><span class="label">身分證字號</span><span class="value">${data.owner_id}</span></div>
+                    <div style="width: 50%;"><span class="label">電子郵件</span><span class="value">${data.owner_email}</span></div>
+                    <div style="width: 100%;"><span class="label">地址</span><span class="value">${data.owner_address}</span></div>
+                    <div style="width: 50%;"><span class="label" style="color:#d9534f;">緊急聯絡人</span><span class="value">${data.emergency_contact}</span></div>
+                    <div style="width: 50%;"><span class="label" style="color:#d9534f;">緊急電話</span><span class="value">${data.emergency_phone}</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">🐱 貓咪詳細資料</h3>
+                <div style="display: flex; flex-wrap: wrap;">
+                    <div style="width: 50%;"><span class="label">名字</span><span class="value">${data.pet_name}</span></div>
+                    <div style="width: 50%;"><span class="label">品種</span><span class="value">${data.pet_breed}</span></div>
+                    <div style="width: 33%;"><span class="label">體重</span><span class="value">${data.pet_weight} kg</span></div>
+                    <div style="width: 33%;"><span class="label">年齡</span><span class="value">${data.pet_age}</span></div>
+                    <div style="width: 33%;"><span class="label">性別/結紮</span><span class="value">${data.pet_sex} / ${data.pet_neuter === 'Y' || data.pet_neuter === '是' ? '已結紮' : '未結紮'}</span></div>
+                    <div style="width: 100%;"><span class="label">晶片資訊</span><span class="value">${data.pet_chip}</span></div>
+                    <div style="width: 100%;"><span class="label">指定醫院</span><span class="value">${data.preferred_clinic}</span></div>
+                    <div style="width: 100%;"><span class="label">特殊病史</span><span class="value" style="color:#d9534f;">${data.history_notes}</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">✨ 本次服務內容與費用</h3>
+                <div style="margin-bottom: 15px;">
+                    <span class="label">主服務</span>
+                    <span class="value" style="font-size: 18px;">${data.service_type}</span>
+                </div>
+                <div style="background: #FAFAFA; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <span class="label">服務細項</span>
+                    <div style="line-height: 1.8;">${tagsHtml}</div>
+                </div>
+                <div class="price-box">
+                    <span class="label">本單總金額</span>
+                    <span class="price-total">NT$ ${data.total_price}</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">📜 契約條款內容</h3>
+                <div class="contract-text">
+                    <p><strong>第一條（契約目的與服務範圍）：</strong>本契約所稱犬、貓美容服務，係指清洗、清潔、吹乾梳毛、毛髮修剪及造型設計等行為，不涉及任何動物醫療行為。</p>
+                    <p><strong>第二條（資訊揭露與契約效力）：</strong>本契約及其附件、公告事項，均視為本契約之一部分，經雙方簽署後生效。</p>
+                    <p><strong>第三條（基本資料）：</strong>本契約應記載犬、貓、甲方（飼主）及乙方（美容店）之基本資料，詳如附件填載內容。</p>
+                    <p><strong>第四條（服務內容與費用確認）：</strong>甲方已於美容服務實施前，充分了解並同意本次美容服務項目、內容及費用。實際服務內容與費用，得依現場犬、貓狀況調整。</p>
+                    <p><strong>第五條（詢問義務與誠實告知）：</strong>乙方於美容前已向甲方詢問犬、貓個性、是否具攻擊性、疾病史或其他特殊注意事項，甲方應誠實告知。若甲方未如實告知，致美容期間發生異常或風險者，該結果非可歸責於乙方。</p>
+                    <p><strong>第六條（攻擊行為與安全中止）：</strong>美容過程中，若犬、貓出現抓、咬、強烈掙扎、持續抗拒等攻擊行為，危及美容師安全者，乙方得立即中止美容服務，不保證完成所有項目。</p>
+                    <p><strong>第七條（抗拒、躁動致無法完成服務）：</strong>犬、貓因緊張、恐懼、躁動或抗拒接受美容服務，致難以繼續接受服務者，屬不可歸責於雙方之事由，乙方得中止或縮短服務流程。</p>
+                    <p><strong>第八條（應激反應與突發異常）：</strong>美容期間如發現犬、貓有喘氣、流口水、失禁、精神不穩等應激或異常狀況，乙方應即時處理並通知甲方，必要時送醫。如該狀況非可歸責於乙方之人為疏失所致，乙方不負損害賠償責任。</p>
+                    <p><strong>第九條（毛髮打結與處理方式調整）：</strong>若現場發現犬、貓毛髮打結嚴重、貼皮結或需額外處理情形，乙方得依實際狀況調整處理方式（包含剃毛）及相關費用。</p>
+                    <p><strong>第十條（服務中止與費用計算）：</strong>即使美容服務因前述原因未完成，凡已實施之洗、吹、剃、修剪等項目，仍屬已提供之服務，乙方得就已發生之服務內容計算費用。</p>
+                    <p><strong>第十一條（異常狀況及責任歸屬）：</strong>犬、貓於美容服務期間發生異常或死亡情形，若屬可歸責於乙方之事由，乙方依法負相關責任；非可歸責於乙方者，乙方不負賠償責任。</p>
+                    <p><strong>第十二條（其他未盡事項）：</strong>本契約未盡事宜，依《犬、貓美容服務定型化契約》及相關法令辦理。</p>
+                </div>
+            </div>
+
+            <div class="section" style="text-align: center;">
+                <span class="label">甲方 (飼主) 簽署</span>
+                <img src="${data.signature_url}" style="max-height: 100px; margin-top: 10px; border-bottom: 2px solid #eee;">
+                <p style="font-size: 10px; color: #ccc;">簽署日期：${new Date().toLocaleDateString()}</p>
+            </div>
+
+            <div class="footer">
+                <p>貝可米努奶喵館 Backme Cattery</p>
+                <p>台中市西屯區福星路324-1號1樓<br>0988-733-384</p>
+                <p style="font-size:10px; margin-top:5px;">此信件為系統自動發送，請勿直接回覆</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
 // --- 送出邏輯 (買賣) ---
 async function submitContract() {
     if (isSubmitting) return;
@@ -2157,7 +2413,13 @@ async function submitContract() {
         
         // ✅ 日期格式化（確保為 YYYY-MM-DD）
         const buyerBirth = formatDateToISO(document.querySelector('#view-contract input[type="date"]').value);
-
+// 驗證電子郵件
+const buyerEmail = document.querySelector('#view-contract input[type="email"]').value;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(buyerEmail)) {
+    showToast('請輸入有效的電子郵件地址', 'error');
+    return;
+}
         const petType = document.querySelector('#view-contract input[name="petType"]:checked')?.value || '貓';
         const petSex = document.querySelector('#view-contract input[name="petSex"]:checked')?.value;
         const petBreed = document.querySelector('#view-contract input[placeholder="例：英國短毛貓"]').value;
@@ -2186,6 +2448,7 @@ async function submitContract() {
                 buyer_id_number: buyerId,
                 buyer_address: buyerAddress,
                 buyer_birthday: buyerBirth,
+                buyer_email: buyerEmail,                 
                 pet_type: petType,
                 pet_sex: petSex,
                 pet_breed: petBreed,
@@ -2202,6 +2465,36 @@ async function submitContract() {
             });
 
         if (error) throw error;
+        // --- 🚀 新增：寄送買賣合約 Email ---
+        try {
+            const mailData = {
+                buyer_name: buyerName,
+                total_price: totalPrice,
+                payment_method: paymentMethods,
+                delivery_date: deliveryDate,
+                pet_breed: petBreed,
+                deposit_amount: depositAmount,
+                balance_amount: balanceAmount,
+                payment_structure: paymentStructure,
+                signature_url: signatureUrl
+            };
+            const emailHtml = getSalesEmailHtml(mailData);
+
+            await _supabase.functions.invoke('send-email', {
+                body: {
+                    email: buyerEmail,
+                    name: buyerName,
+                    subject: `[合約副本] 貝可米努 - 寵物買賣契約 (${petBreed})`,
+                    htmlContent: emailHtml 
+                }
+            });
+            console.log("寄信請求已送出");
+} catch (mailErr) {
+            console.error("寄信失敗詳細原因:", mailErr);
+            showToast('⚠️ 契約已送出，但副本 Email 寄送失敗，請洽店家確認。', 'warning');
+        }
+
+        // ------------------------------------
 
         showToast('契約已成功送出！', 'success');
         setTimeout(() => router('home'), 1500);
@@ -2385,6 +2678,55 @@ const totalPrice = document.getElementById('finalDisplay').innerText;
 
 
         if (error) throw error;
+// --- 🚀 新增：寄送美容合約 Email ---
+        try {
+            const mailData = {
+                // 1. 飼主資料 (Part A)
+                owner_name: ownerName,
+                owner_phone: ownerPhone,
+                owner_email: ownerEmail,
+                owner_id: ownerId,
+                owner_address: ownerAddress,
+                emergency_contact: emergName,
+                emergency_phone: emergPhone,
+
+                // 2. 寵物資料
+                pet_name: petName,
+                pet_breed: petBreed,
+                pet_weight: petWeight,
+                pet_age: petAge,
+                pet_sex: petSex,
+                pet_neuter: petNeuter,
+                pet_chip: finalChip, // 這裡會帶入 "有 (晶片號碼)" 或 "無"
+                preferred_clinic: preferredClinic,
+                history_notes: historyNotes, // 這裡會帶入 "心臟病, 氣喘..." 或 "無"
+
+                // 3. 服務與金額
+                service_type: mainServiceType,
+                service_details: serviceDetails.join('、'), // 這裡傳給後端去切割成標籤
+                total_price: totalPrice,
+                
+                // 4. 簽名
+                signature_url: signatureUrl
+            };
+            
+            // 產生 HTML
+            const emailHtml = getGroomingEmailHtml(mailData);
+
+            await _supabase.functions.invoke('send-email', {
+                body: {
+                    email: ownerEmail,
+                    name: ownerName,
+                    subject: `[服務通知] 貝可米努 - ${petName} 美容服務契約`,
+                    htmlContent: emailHtml
+                }
+            });
+            console.log("寄信請求已送出");
+} catch (mailErr) {
+            console.error("寄信失敗詳細原因:", mailErr);
+            showToast('⚠️ 契約已送出，但副本 Email 寄送失敗，請洽店家確認。', 'warning');
+        }
+        // ------------------------------------        
 
         showToast('美容契約已成功送出！', 'success');
         setTimeout(() => router('home'), 1500);
