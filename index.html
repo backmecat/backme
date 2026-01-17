@@ -265,6 +265,41 @@ body {
             box-shadow: 0 4px 10px rgba(219, 39, 119, 0.4);
             transform: translateY(-2px);
         }
+
+        /* 新增 CSS 優化 */
+.safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+/* 優化簽名板觸控體驗 */
+#signatureCanvas {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* 橫屏模式優化 */
+@media (orientation: landscape) {
+    #signatureModal .flex-1 {
+        max-height: 80vh;
+    }
+    
+    #signatureModal .fixed.bottom-0 {
+        position: static;
+        padding-bottom: 1rem;
+    }
+}
+
+/* 防止 iOS 橡皮筋效果 */
+.signature-modal-open {
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
     </style>
 </head>
 
@@ -452,16 +487,16 @@ body {
             </h3>
             
 <div class="space-y-6">
-    <div class="relative max-w-[280px] mx-auto shadow-sm group mt-4">
-        <label class="absolute -top-7 left-0 right-0 text-center text-xs font-bold text-gray-400">總價 Total Price *</label>
-        <span class="absolute left-6 top-1/2 -translate-y-1/2 text-brand-purple font-black text-xl">NT$</span>
-        <input type="tel" 
-               inputmode="numeric" 
-               oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
-               id="totalPrice" 
-               class="w-full required-field text-center text-4xl font-black text-brand-text bg-white border-2 border-brand-purple/20 rounded-3xl py-6 pl-8 focus:outline-none focus:border-brand-purple focus:shadow-glow-purple transition-all placeholder:text-gray-200" 
-               placeholder="0">
-    </div>
+<div class="relative max-w-[280px] mx-auto shadow-sm group mt-8">
+    <label class="absolute -top-8 left-0 right-0 text-center text-xs font-bold text-gray-400">總價 Total Price *</label>
+    <span class="absolute left-6 top-1/2 -translate-y-1/2 text-brand-purple font-black text-xl">NT$</span>
+    <input type="tel" 
+           inputmode="numeric" 
+           oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+           id="totalPrice" 
+           class="w-full required-field text-center text-4xl font-black text-brand-text bg-white border-2 border-brand-purple/20 rounded-3xl py-6 pl-8 focus:outline-none focus:border-brand-purple focus:shadow-glow-purple transition-all placeholder:text-gray-200" 
+           placeholder="0">
+</div>
 
     <div class="space-y-2">
         <label class="text-sm font-bold text-gray-500 block ml-1 text-center">交付日期 Delivery Date *</label>
@@ -1370,25 +1405,49 @@ body {
     </div>
 </main>
 
-    <div id="signatureModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[9999] hidden flex-col transition-opacity duration-300 opacity-0 pt-safe">
-        <div class="flex-1 m-4 md:m-8 bg-white rounded-[2rem] flex flex-col shadow-2xl overflow-hidden relative animate-slide-up pb-safe" style="animation-duration: 0.3s;">
-            <div class="flex justify-between items-center p-5 border-b border-gray-100 bg-brand-bg">
-                <button onclick="closeSignatureModal()" class="text-xs font-bold uppercase text-gray-400 tracking-wider active:scale-95 transition-transform p-2">取消</button>
-                <span class="font-black text-brand-dark">請在此簽名</span>
-                <button onclick="saveSignature()" class="bg-brand-main text-white px-6 py-2 rounded-full font-bold text-xs shadow-md active:scale-95 transition-transform hover:bg-brand-dark">完成</button>
-            </div>
-            
-            <div class="flex-1 bg-white relative m-0 overflow-hidden canvas-container">
-                <canvas id="signatureCanvas"></canvas>
-            </div>
-
-            <div class="absolute bottom-8 w-full flex justify-center pointer-events-none pb-safe">
-                <button onclick="clearCanvas()" class="pointer-events-auto bg-white border border-gray-200 text-red-500 text-xs font-bold px-6 py-3 rounded-full shadow-lg flex items-center gap-2 active:scale-95 transition-transform">
-                    <i data-lucide="eraser" class="w-4 h-4"></i> 清除重寫
-                </button>
-            </div>
+<!-- 簽名 Modal 優化版 -->
+<div id="signatureModal" class="fixed inset-0 z-[9999] hidden flex-col transition-opacity duration-300 opacity-0 bg-white">
+    <!-- 頂部操作欄 -->
+    <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-100 bg-brand-bg shrink-0 safe-area-top">
+        <button onclick="closeSignatureModal()" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold active:scale-95 transition-transform">
+            <i data-lucide="x" class="w-5 h-5"></i>
+            <span class="hidden sm:inline">取消</span>
+        </button>
+        
+        <div class="text-center">
+            <h2 class="text-xl font-black text-brand-dark">請在此簽名</h2>
+            <p class="text-xs text-gray-400 mt-1">使用手指或觸控筆簽署</p>
+        </div>
+        
+        <button onclick="saveSignature()" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-main text-white font-bold shadow-lg active:scale-95 transition-transform">
+            <span class="hidden sm:inline">完成</span>
+            <i data-lucide="check" class="w-5 h-5"></i>
+        </button>
+    </div>
+    
+    <!-- 簽名區域 -->
+<div class="flex-1 bg-white/80 backdrop-blur-sm relative overflow-hidden touch-none select-none border-t border-b border-gray-100/50">
+    <canvas id="signatureCanvas" class="block w-full h-full cursor-crosshair touch-action-none"></canvas>
+    
+    <!-- 簽名提示 -->
+    <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 transition-opacity" id="signatureHint">
+        <div class="text-center bg-white/90 backdrop-blur-md px-6 py-4 rounded-2xl shadow-lg border border-gray-100">
+            <i data-lucide="pen-tool" class="w-12 h-12 mx-auto text-brand-main/30 mb-2"></i>
+            <p class="text-brand-main/30 font-bold">在此區域簽名</p>
         </div>
     </div>
+</div>
+
+    <!-- 底部操作欄（固定） -->
+    <div class="fixed bottom-0 left-0 right-0 p-6 pb-[max(2rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
+        <div class="flex justify-center pointer-events-auto">
+            <button onclick="clearCanvas()" class="flex items-center gap-2 px-8 py-4 bg-white border-2 border-red-200 text-red-500 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform hover:bg-red-50">
+                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                清除重寫
+            </button>
+        </div>
+    </div>
+</div>
 
     <script>
 // === Supabase 設定 ===
@@ -1406,6 +1465,43 @@ function dataURLtoBlob(dataurl) {
         u8arr[n] = bstr.charCodeAt(n);
     }
     return new Blob([u8arr], {type:mime});
+}
+// ✨ 新增：自動裁切 Canvas 空白區域的函式
+function trimCanvas(c) {
+    var ctx = c.getContext('2d'),
+        copy = document.createElement('canvas').getContext('2d'),
+        pixels = ctx.getImageData(0, 0, c.width, c.height),
+        l = c.width, t = c.height, r = 0, b = 0,
+        x, y, i, len = pixels.data.length;
+
+    // 掃描所有像素，找出有筆畫的邊界
+    for (i = 0; i < len; i += 4) {
+        if (pixels.data[i + 3] !== 0) { // 如果透明度不為 0 (代表有畫東西)
+            x = (i / 4) % c.width;
+            y = Math.floor((i / 4) / c.width);
+
+            if (x < l) l = x;
+            if (y < t) t = y;
+            if (x > r) r = x;
+            if (y > b) b = y;
+        }
+    }
+
+    // 如果完全沒畫東西
+    if (l > r) return null;
+
+    // 留一點邊距 (Padding) 才不會太擠
+    const padding = 10;
+    const w = (r - l) + (padding * 2);
+    const h = (b - t) + (padding * 2);
+
+    copy.canvas.width = w;
+    copy.canvas.height = h;
+    
+    // 將裁切後的區域畫到新的 Canvas
+    copy.drawImage(c, l, t, r - l, b - t, padding, padding, r - l, b - t);
+
+    return copy.canvas.toDataURL("image/png");
 }
 
 // 輔助函式：上傳簽名 (✅ 修正版：移除中文字元)
@@ -1959,76 +2055,118 @@ function openSignatureModal(id) {
     const modal = document.getElementById('signatureModal');
     const canvas = document.getElementById('signatureCanvas');
     const navbar = document.getElementById('navbar'); 
+    const hint = document.getElementById('signatureHint');
     
     if (navbar) navbar.classList.add('hidden');
     
-    // 鎖定背景滾動
+    // 鎖定背景滾動 (新增)
     document.body.style.overflow = 'hidden';
-    document.body.classList.add('modal-open');
+    document.body.classList.add('signature-modal-open'); // 使用新增的 class
     
     modal.classList.remove('hidden');
+    
+    // 顯示提示
+    hint.classList.remove('opacity-0');
     
     requestAnimationFrame(() => {
         modal.classList.remove('opacity-0');
         resizeCanvas(canvas);
+        
         if (!signaturePad) {
-            signaturePad = new SignaturePad(canvas, {
-                backgroundColor: 'rgba(255, 255, 255, 0)',
-                penColor: '#5D5046', 
-                minWidth: 1.5, maxWidth: 3.5
-            });
+signaturePad = new SignaturePad(canvas, {
+    backgroundColor: 'rgba(255, 255, 255, 0)',
+    penColor: '#5D5046',
+    velocityFilterWeight: 0.7,
+    minWidth: 0.5,  // 最細線條
+    maxWidth: 2.5, // 最粗線條
+    throttle: 16,
+    minDistance: 2
+});
+
         } else {
             signaturePad.clear();
         }
+
+        // 當開始簽名時，隱藏提示
+        signaturePad.addEventListener("beginStroke", () => {
+            hint.classList.add('opacity-0');
+        }, { once: true });
+        // ✨ 新增：簽名時隱藏底部按鈕
+const clearBtn = document.querySelector('button[onclick="clearCanvas()"]');
+
+signaturePad.addEventListener("beginStroke", () => {
+    if(clearBtn) clearBtn.classList.add('translate-y-24', 'opacity-0'); // 按鈕往下移並變透明
+});
+
+signaturePad.addEventListener("endStroke", () => {
+    if(clearBtn) clearBtn.classList.remove('translate-y-24', 'opacity-0'); // 按鈕移回原位
+});
+
     });
 }
+
 
 // 優化後的簽名板關閉邏輯
 function closeSignatureModal() {
     const modal = document.getElementById('signatureModal');
     const navbar = document.getElementById('navbar'); 
+    const hint = document.getElementById('signatureHint');
+    
     modal.classList.add('opacity-0');
     setTimeout(() => {
         modal.classList.add('hidden');
         if(signaturePad) signaturePad.clear(); 
         if (navbar) navbar.classList.remove('hidden');
         
-        // 解除背景鎖定
+        // 解除背景鎖定 (新增)
         document.body.style.overflow = '';
-        document.body.classList.remove('modal-open');
+        document.body.classList.remove('signature-modal-open');
+        
+        // 重置提示顯示
+        hint.classList.remove('opacity-0');
     }, 300);
 }
 
 
+
         function clearCanvas() { if (signaturePad) signaturePad.clear(); }
 
-        function saveSignature() {
-            if (!signaturePad || signaturePad.isEmpty()) {
-                showToast('請先簽名後再點擊完成', 'warning');
-                return;
-            }
-            const dataUrl = signaturePad.toDataURL("image/png");
-            const imgEl = document.getElementById(`img-${currentSigId}`);
-            const placeholderEl = document.getElementById(`placeholder-${currentSigId}`);
-            
-            if (imgEl && placeholderEl) {
-                imgEl.src = dataUrl;
-                imgEl.classList.remove('hidden');
-                placeholderEl.classList.add('hidden');
-                
-                const container = imgEl.parentElement;
-                container.classList.add(currentSigId === 'buyer' ? 'border-brand-purple' : 'border-brand-pink');
-                container.classList.add(currentSigId === 'buyer' ? 'bg-brand-purple/5' : 'bg-brand-pink/5');
-                container.classList.remove('border-dashed', 'border-gray-300');
-                container.classList.add('border-solid');
-            }
-            
-            if (currentSigId === 'buyer') {
-                const dateEl = document.getElementById('date-buyer');
-                if(dateEl) dateEl.innerText = new Date().toLocaleDateString();
-            }
-            closeSignatureModal();
-        }
+// ✅ 修改後的儲存簽名函式 (加入裁切邏輯)
+function saveSignature() {
+    if (!signaturePad || signaturePad.isEmpty()) {
+        showToast('請先簽名後再點擊完成', 'warning');
+        return;
+    }
+
+    // ✨ 新增：自動裁切空白
+    const canvas = document.getElementById('signatureCanvas');
+    const trimmedDataUrl = trimCanvas(canvas);
+    
+    // 如果裁切失敗（例如完全沒畫），就用原本的
+    const dataUrl = trimmedDataUrl || signaturePad.toDataURL("image/png");
+
+    const imgEl = document.getElementById(`img-${currentSigId}`);
+    const placeholderEl = document.getElementById(`placeholder-${currentSigId}`);
+    
+    if (imgEl && placeholderEl) {
+        imgEl.src = dataUrl; // ✅ 這裡修正了變數名稱
+        imgEl.classList.remove('hidden');
+        placeholderEl.classList.add('hidden');
+        
+        const container = imgEl.parentElement;
+        container.classList.add(currentSigId === 'buyer' ? 'border-brand-purple' : 'border-brand-pink');
+        container.classList.add(currentSigId === 'buyer' ? 'bg-brand-purple/5' : 'bg-brand-pink/5');
+        container.classList.remove('border-dashed', 'border-gray-300');
+        container.classList.add('border-solid');
+    }
+    
+    if (currentSigId === 'buyer') {
+        const dateEl = document.getElementById('date-buyer');
+        if(dateEl) dateEl.innerText = new Date().toLocaleDateString();
+    }
+    closeSignatureModal();
+}
+
 
         // --- 輔助功能 ---
         function toggleChipInput(show) {
@@ -3029,6 +3167,7 @@ function findSectionByTitle(titleText) {
     }
     return null; // 找不到就回傳 null
 }
+
 
         
     </script>
