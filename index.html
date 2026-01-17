@@ -2465,35 +2465,55 @@ if (!emailRegex.test(buyerEmail)) {
             });
 
         if (error) throw error;
-        // --- 🚀 新增：寄送買賣合約 Email ---
+// --- 🚀 新增：寄送買賣合約 Email ---
         try {
+            // ❌ 舊的寫法漏了一堆資料，所以 Email 才會出現 undefined
+            // ✅ 修正版：把所有抓到的變數都塞進去
             const mailData = {
+                // 1. 買方資料 
                 buyer_name: buyerName,
+                buyer_phone: buyerPhone,      
+                buyer_address: buyerAddress,  
+                buyer_email: buyerEmail,      
+                buyer_id_number: buyerId,     
+                buyer_birthday: buyerBirth,   
+
+                // 2. 寵物資料
+                pet_type: petType,            
+                pet_breed: petBreed,
+                pet_sex: petSex,              
+                pet_color: petColor,          
+                pet_birthday: petBirth,       
+
                 total_price: totalPrice,
                 payment_method: paymentMethods,
                 delivery_date: deliveryDate,
-                pet_breed: petBreed,
+                
+                // 4. 付款結構
+                payment_structure: paymentStructure,
                 deposit_amount: depositAmount,
                 balance_amount: balanceAmount,
-                payment_structure: paymentStructure,
+                
+                // 5. 簽名
                 signature_url: signatureUrl
             };
+            
             const emailHtml = getSalesEmailHtml(mailData);
 
             await _supabase.functions.invoke('send-email', {
                 body: {
-                    email: buyerEmail,
+                    email: buyerEmail, // 寄給買家
                     name: buyerName,
                     subject: `[合約副本] 貝可米努 - 寵物買賣契約 (${petBreed})`,
                     htmlContent: emailHtml 
                 }
             });
             console.log("寄信請求已送出");
-} catch (mailErr) {
+
+        } catch (mailErr) {
             console.error("寄信失敗詳細原因:", mailErr);
             showToast('⚠️ 契約已送出，但副本 Email 寄送失敗，請洽店家確認。', 'warning');
         }
-
         // ------------------------------------
 
         showToast('契約已成功送出！', 'success');
