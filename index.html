@@ -717,8 +717,11 @@ body {
                     </div>
                 </div>
                 
-<!-- 買賣契約送出按鈕 -->
-<button onclick="submitContract()" class="w-full py-4 bg-gradient-to-r from-brand-purple to-[#8391CC] text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-purple/30 hover:shadow-xl hover:shadow-brand-purple/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
+<button id="btn-gen-link" onclick="generateCustomerLink()" class="mb-4 w-full py-4 bg-white border-2 border-brand-purple text-brand-purple rounded-xl font-bold text-sm shadow-sm hover:bg-brand-purple/5 transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
+    <i data-lucide="link" class="w-4 h-4"></i> 產生給客人的填寫連結 (鎖定金額)
+</button>
+
+<button id="btn-submit-sales" onclick="submitContract()" class="w-full py-4 bg-gradient-to-r from-brand-purple to-[#8391CC] text-white rounded-xl font-bold text-sm shadow-lg shadow-brand-purple/30 hover:shadow-xl hover:shadow-brand-purple/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
     確認並送出 <i data-lucide="arrow-right" class="w-4 h-4"></i>
 </button>
                 </div>
@@ -2900,14 +2903,23 @@ const totalPrice = document.getElementById('finalDisplay').innerText;
     }
 }
  
-    // === 初始化 ===
+// === 初始化 ===
 document.addEventListener('DOMContentLoaded', () => {
     setupRealtimeValidation();
     calculateTotal();
     lucide.createIcons();
-    // ✅ 新增：讀取網址 hash 來決定要顯示哪一頁
+    
+    // 1. 檢查是否有網址參數 (客人模式)
+    checkUrlParamsForCustomer();
+
+    // 2. 處理路由 (如果有網址參數指定 view，優先權高於 hash)
+    const params = new URLSearchParams(window.location.search);
+    const viewParam = params.get('view');
     const hash = window.location.hash.replace('#', '');
-    if (hash && ['contract', 'grooming'].includes(hash)) {
+    
+    if (viewParam) {
+        router(viewParam); // 例如 ?view=contract 會直接打開契約頁
+    } else if (hash && ['contract', 'grooming'].includes(hash)) {
         router(hash);
     }
 });
@@ -3167,7 +3179,144 @@ function findSectionByTitle(titleText) {
     }
     return null; // 找不到就回傳 null
 }
+// === 新功能：產生給客人的專屬連結 ===
+function generateCustomerLink() {
+    // 1. 抓取要鎖定的資料
+    const params = new URLSearchParams();
+    
+    // 設定這是一個給客人的買賣契約連結
+    params.set('mode', 'customer_fill'); 
+    params.set('view', 'contract'); // 自動切換到買賣契約頁面
 
+    // 抓取欄位值
+    const petType = document.querySelector('#view-contract input[name="petType"]:checked')?.value;
+    const petSex = document.querySelector('#view-contract input[name="petSex"]:checked')?.value;
+    const petBreed = document.querySelector('#view-contract input[placeholder="例：英國短毛貓"]').value;
+    const petColor = document.querySelector('#view-contract input[placeholder="例：藍色"]').value;
+    const petBirth = document.querySelectorAll('#view-contract input[type="date"]')[1]?.value; // 這是第二個日期欄位(出生日期)
+    
+    const totalPrice = document.getElementById('totalPrice').value;
+    const deliveryDate = document.querySelectorAll('#view-contract input[type="date"]')[2]?.value; // 這是第三個日期欄位(交付日期)
+    
+    // 付款結構
+    const paymentStructure = document.querySelector('#view-contract input[name="paymentStructure"]:checked')?.value;
+    const deposit = document.getElementById('depositInput').value;
+    const balance = document.getElementById('balanceInput').value;
+
+    // 2. 塞入參數 (有填才塞)
+    if (petType) params.set('petType', petType);
+    if (petSex) params.set('petSex', petSex);
+    if (petBreed) params.set('petBreed', petBreed);
+    if (petColor) params.set('petColor', petColor);
+    if (petBirth) params.set('petBirth', petBirth);
+    if (totalPrice) params.set('totalPrice', totalPrice);
+    if (deliveryDate) params.set('deliveryDate', deliveryDate);
+    
+    if (paymentStructure) params.set('paymentStructure', paymentStructure);
+    if (deposit) params.set('deposit', deposit);
+    if (balance) params.set('balance', balance);
+
+    // 3. 產生網址
+    const baseUrl = window.location.origin + window.location.pathname;
+    const finalUrl = `${baseUrl}?${params.toString()}`;
+
+    // 4. 複製到剪貼簿
+    navigator.clipboard.writeText(finalUrl).then(() => {
+        showToast('✅ 連結已複製！請傳送給客人填寫', 'success');
+    }).catch(err => {
+        console.error('複製失敗', err);
+        showToast('複製失敗，請手動複製網址列', 'error');
+        prompt("請複製以下網址傳給客人：", finalUrl);
+    });
+}
+
+// === 新功能：檢查網址是否有帶入資料 (客人打開時) ===
+function checkUrlParamsForCustomer() {
+    const params = new URLSearchParams(window.location.search);
+    
+    // 如果不是客人模式，就跳過
+    if (params.get('mode') !== 'customer_fill') return;
+
+    console.log("偵測到客人填寫模式，正在帶入資料...");
+
+    // 隱藏「產生連結」按鈕 (客人不需要看到這個)
+    const genBtn = document.getElementById('btn-gen-link');
+    if(genBtn) genBtn.style.display = 'none';
+
+    // 定義鎖定欄位的樣式
+    const lockStyle = (el) => {
+        if (!el) return;
+        el.readOnly = true; // 設定唯讀
+        el.disabled = true; // 設定禁用 (針對 radio/checkbox)
+        el.style.backgroundColor = '#f3f4f6'; // 灰色背景
+        el.style.color = '#9ca3af'; // 灰色文字
+        el.style.cursor = 'not-allowed';
+    };
+
+    // --- 開始帶入資料並鎖定 ---
+
+    // 1. 寵物種類 (Radio)
+    const pType = params.get('petType');
+    if (pType) {
+        const radio = document.querySelector(`#view-contract input[name="petType"][value="${pType}"]`);
+        if(radio) { radio.checked = true; }
+        // 鎖定所有種類選項
+        document.querySelectorAll('#view-contract input[name="petType"]').forEach(el => el.disabled = true);
+    }
+
+    // 2. 性別 (Radio)
+    const pSex = params.get('petSex');
+    if (pSex) {
+        const radio = document.querySelector(`#view-contract input[name="petSex"][value="${pSex}"]`);
+        if(radio) { radio.checked = true; }
+        document.querySelectorAll('#view-contract input[name="petSex"]').forEach(el => el.disabled = true);
+    }
+
+    // 3. 文字欄位 (品種、毛色、總價)
+    const fillAndLock = (selector, paramKey) => {
+        const val = params.get(paramKey);
+        const el = document.querySelector(selector);
+        if (val && el) {
+            el.value = val;
+            lockStyle(el);
+        }
+    };
+
+    fillAndLock('#view-contract input[placeholder="例：英國短毛貓"]', 'petBreed');
+    fillAndLock('#view-contract input[placeholder="例：藍色"]', 'petColor');
+    fillAndLock('#totalPrice', 'totalPrice'); // 總價特別重要
+
+    // 4. 日期欄位
+    const birthInput = document.querySelectorAll('#view-contract input[type="date"]')[1];
+    if (params.get('petBirth') && birthInput) {
+        birthInput.value = params.get('petBirth');
+        lockStyle(birthInput);
+    }
+
+    const deliveryInput = document.querySelectorAll('#view-contract input[type="date"]')[2];
+    if (params.get('deliveryDate') && deliveryInput) {
+        deliveryInput.value = params.get('deliveryDate');
+        lockStyle(deliveryInput);
+    }
+
+    // 5. 付款結構 (定金/尾款)
+    const payStruct = params.get('paymentStructure');
+    if (payStruct) {
+        const radio = document.querySelector(`#view-contract input[name="paymentStructure"][value="${payStruct}"]`);
+        if(radio) {
+            radio.click(); // 模擬點擊以觸發 UI 切換 (顯示定金欄位)
+            setTimeout(() => { // 稍微延遲確保 UI 切換完畢
+                document.querySelectorAll('#view-contract input[name="paymentStructure"]').forEach(el => el.disabled = true);
+                
+                // 填入定金尾款數字
+                fillAndLock('#depositInput', 'deposit');
+                fillAndLock('#balanceInput', 'balance');
+            }, 100);
+        }
+    }
+
+    showToast('已為您自動帶入店家指定資料', 'info');
+}
 
         
     </script>
