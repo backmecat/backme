@@ -26,7 +26,7 @@
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/backme/service-worker.js?v=1')
+            navigator.serviceWorker.register('/backme/service-worker.js?v=2')
                 .then(reg => console.log('✅ PWA 已启用:', reg.scope))
                 .catch(err => console.log('❌ PWA 注册失败:', err));
         });
@@ -1218,7 +1218,7 @@ body {
                                 </div>
                             </div>
                             <div class="bg-white/60 p-3 rounded-xl col-span-2">
-                                <label class="block text-xs text-gray-500 mb-2">其他加價 (如: 7kg以上每公斤+120)</label>
+                                <label class="block text-xs text-gray-500 mb-2">其他加價 (如: 7kg以上每公斤+250)</label>
                                 <div class="flex items-center">
                                     <span class="text-xs text-gray-400 mr-1">$</span>
                                     <input type="number" id="fee-other" value="0" min="0" oninput="calculateTotal()" class="w-full bg-transparent border-b border-gray-300 focus:border-red-500 text-base font-bold text-gray-700 focus:outline-none p-1 text-right">
