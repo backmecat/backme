@@ -26,7 +26,7 @@
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/backme/service-worker.js')
+            navigator.serviceWorker.register('/backme/service-worker.js?v=1')
                 .then(reg => console.log('✅ PWA 已启用:', reg.scope))
                 .catch(err => console.log('❌ PWA 注册失败:', err));
         });
@@ -298,6 +298,50 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+}
+/* === 簽名全螢幕真正滿版 (修正版) === */
+#signatureModal {
+    width: 100vw;
+    height: 100vh;
+}
+
+/* ✅ 讓 hidden 一定生效 */
+#signatureModal.hidden {
+    display: none !important;
+}
+
+/* ✅ 只有打開時才是 flex */
+#signatureModal:not(.hidden) {
+    display: flex;
+    flex-direction: column;
+}
+
+.signature-header {
+    flex: 0 0 auto;
+}
+
+.signature-footer {
+    flex: 0 0 auto;
+    background: linear-gradient(to top, #ffffff 0%, #ffffff 60%, transparent 100%);
+    position: relative;
+    z-index: 5;
+}
+
+.signature-canvas-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    position: relative;
+    background: #fff;
+}
+
+#signatureCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
 }
 
     </style>
@@ -705,17 +749,29 @@ body {
                 </div>
             </section>
 
-            <section class="glass-card p-6 space-y-4">
-                <div onclick="openSignatureModal('buyer')" class="bg-white border-2 border-dashed border-gray-300 h-44 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand-purple hover:bg-brand-purple/5 transition-all relative overflow-hidden group active:scale-[0.98]">
-                    <img id="img-buyer" class="hidden h-full w-full object-contain p-4 absolute inset-0 bg-white">
-                    <div id="placeholder-buyer" class="text-center group-hover:scale-105 transition-transform duration-300">
-                        <div class="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-brand-purple group-hover:text-white transition-colors duration-300 shadow-sm">
-                            <i data-lucide="pen-tool" class="w-5 h-5"></i>
-                        </div>
-                        <p class="text-xs font-bold text-gray-400 group-hover:text-brand-purple transition-colors uppercase tracking-wider">點擊簽署 (乙方)</p>
-                        <p class="text-[10px] text-gray-300 mt-1" id="date-buyer"></p>
-                    </div>
-                </div>
+<section class="glass-card p-6 space-y-4">
+    <div onclick="openSignatureModal('buyer')" class="bg-white border-2 border-dashed border-gray-300 h-44 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand-purple hover:bg-brand-purple/5 transition-all relative overflow-hidden group active:scale-[0.98]">
+        <img id="img-buyer" class="hidden h-full w-full object-contain p-4 absolute inset-0 bg-white">
+        <div id="placeholder-buyer" class="text-center group-hover:scale-105 transition-transform duration-300">
+            <div class="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-brand-purple group-hover:text-white transition-colors duration-300 shadow-sm">
+                <i data-lucide="pen-tool" class="w-5 h-5"></i>
+            </div>
+            <p class="text-xs font-bold text-gray-400 group-hover:text-brand-purple transition-colors uppercase tracking-wider">點擊簽署 (乙方)</p>
+        </div>
+    </div>
+
+    <!-- 簽署狀態 + 時間 -->
+<div id="sigstatus-buyer" class="hidden mt-3 flex items-center justify-end gap-3">
+    <button onclick="reSign('buyer')" 
+        class="text-xs font-bold px-3 py-1.5 rounded-full border border-brand-purple/30 text-brand-purple hover:bg-brand-purple/10 transition">
+        重簽
+    </button>
+    <span class="bg-brand-purple/10 text-brand-purple px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1 border border-brand-purple/30">
+        <i data-lucide="check-circle" class="w-4 h-4"></i> 已簽署
+    </span>
+    <span id="sigtime-buyer" class="text-[11px] text-gray-400 font-bold"></span>
+</div>
+</section>
                 
 <button id="btn-gen-link" onclick="generateCustomerLink()" class="mb-4 w-full py-4 bg-white border-2 border-brand-purple text-brand-purple rounded-xl font-bold text-sm shadow-sm hover:bg-brand-purple/5 transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
     <i data-lucide="link" class="w-4 h-4"></i> 產生給客人的填寫連結 (鎖定金額)
@@ -739,13 +795,6 @@ body {
             <p class="text-brand-pink text-xs font-extrabold uppercase tracking-widest bg-brand-pink/5 py-1.5 px-4 rounded-full inline-block">Grooming Service</p>
         </div>
         
-        <div class="glass-card p-0 overflow-hidden shadow-sm">
-<img src="menu.jpg" 
-     alt="美容價目表" 
-     loading="lazy"
-     class="w-full h-auto object-cover block">
-            </div>
-
         <section class="glass-card p-6 space-y-5 relative overflow-hidden border-l-4 border-l-brand-pink">
              <h3 class="text-sm font-black text-brand-pink uppercase tracking-wider flex items-center gap-2 relative z-10">
                 <i data-lucide="user" class="w-4 h-4"></i> 飼主資料 (甲方)
@@ -1108,12 +1157,16 @@ body {
                     <div class="p-4 bg-yellow-50/50 border-b border-white/50 flex justify-between items-center">
                         <span class="text-sm font-bold text-yellow-700 flex items-center gap-2"><i data-lucide="star" class="w-4 h-4"></i> 升級項目</span>
                     </div>
-                    <div class="p-4 grid grid-cols-2 gap-4">
-                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" value="200" class="calc-check accent-brand-pink w-5 h-5" onchange="calculateTotal()"> <span class="text-sm text-gray-600">SPA深層去油 (+200)</span></label>
-                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" value="100" class="calc-check accent-brand-pink w-5 h-5" onchange="calculateTotal()"> <span class="text-sm text-gray-600">幼貓SPA (+100)</span></label>
-                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" value="150" class="calc-check accent-brand-pink w-5 h-5" onchange="calculateTotal()"> <span class="text-sm text-gray-600">除菌藥浴 (+150)</span></label>
-                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" value="200" class="calc-check accent-brand-pink w-5 h-5" onchange="calculateTotal()"> <span class="text-sm text-gray-600">除蚤藥浴 (+200)</span></label>
-                    </div>
+<div class="p-4 grid grid-cols-2 gap-4">
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" value="250" class="calc-check accent-brand-pink w-5 h-5" onchange="calculateTotal()"> 
+        <span class="text-sm text-gray-600">藥浴 (+250)</span>
+    </label>
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" value="300" class="calc-check accent-brand-pink w-5 h-5" onchange="calculateTotal()"> 
+        <span class="text-sm text-gray-600">賽級去油酶 (+300)</span>
+    </label>
+</div>
                 </div>
 
                 <div class="bg-white/50 rounded-2xl border border-white/60 overflow-hidden">
@@ -1133,13 +1186,21 @@ body {
                         <span class="text-sm font-bold text-red-700 flex items-center gap-2"><i data-lucide="alert-circle" class="w-4 h-4"></i> 特殊加價</span>
                     </div>
                     <div class="p-4 space-y-4">
-                        <div class="flex items-center justify-between bg-white/60 p-3 rounded-xl">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" value="250" class="calc-check accent-red-500 w-5 h-5" onchange="calculateTotal()"> 
-                                <span class="text-sm font-bold text-gray-700">體重 6kg(含)以上(+250)</span>
-                            </label>
-                            <span class="text-sm font-bold text-red-500">+250</span>
-                        </div>
+<div class="flex items-center justify-between bg-white/60 p-3 rounded-xl">
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" value="120" class="calc-check accent-red-500 w-5 h-5" onchange="calculateTotal()"> 
+        <span class="text-sm font-bold text-gray-700">體重 6公斤以上 (+120)</span>
+    </label>
+    <span class="text-sm font-bold text-red-500">+120</span>
+</div>
+
+<div class="flex items-center justify-between bg-white/60 p-3 rounded-xl">
+    <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" value="250" class="calc-check accent-red-500 w-5 h-5" onchange="calculateTotal()"> 
+        <span class="text-sm font-bold text-gray-700">體重 7公斤以上 (+250)</span>
+    </label>
+    <span class="text-sm font-bold text-red-500">+250</span>
+</div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div class="bg-white/60 p-3 rounded-xl">
@@ -1388,17 +1449,29 @@ body {
                 </div>
             </section>
 
-             <section class="glass-card p-6 space-y-4">
-                <div onclick="openSignatureModal('owner')" class="bg-white border-2 border-dashed border-gray-300 h-44 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-pink hover:bg-brand-pink/5 transition-all relative overflow-hidden group active:scale-[0.98]">
-                    <img id="img-owner" class="hidden h-full w-full object-contain p-4 absolute inset-0 bg-white">
-                    <div id="placeholder-owner" class="text-xs font-bold text-gray-400 flex flex-col items-center gap-2 group-hover:text-brand-pink transition-colors">
-                        <div class="w-12 h-12 bg-brand-pink/10 text-brand-pink rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm group-hover:bg-brand-pink group-hover:text-white transition-colors duration-300">
-                            <i data-lucide="pen-tool" class="w-6 h-6"></i>
-                        </div>
-                        點擊此處簽名確認 (甲方)
-                    </div>
-                </div>
-            </section>
+<section class="glass-card p-6 space-y-4">
+    <div onclick="openSignatureModal('owner')" class="bg-white border-2 border-dashed border-gray-300 h-44 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-pink hover:bg-brand-pink/5 transition-all relative overflow-hidden group active:scale-[0.98]">
+        <img id="img-owner" class="hidden h-full w-full object-contain p-4 absolute inset-0 bg-white">
+        <div id="placeholder-owner" class="text-xs font-bold text-gray-400 flex flex-col items-center gap-2 group-hover:text-brand-pink transition-colors">
+            <div class="w-12 h-12 bg-brand-pink/10 text-brand-pink rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm group-hover:bg-brand-pink group-hover:text-white transition-colors duration-300">
+                <i data-lucide="pen-tool" class="w-6 h-6"></i>
+            </div>
+            點擊此處簽名確認 (甲方)
+        </div>
+    </div>
+
+    <!-- 簽署狀態 + 時間 -->
+<div id="sigstatus-owner" class="hidden mt-3 flex items-center justify-end gap-3">
+    <button onclick="reSign('owner')" 
+        class="text-xs font-bold px-3 py-1.5 rounded-full border border-brand-pink/30 text-brand-pink hover:bg-brand-pink/10 transition">
+        重簽
+    </button>
+    <span class="bg-brand-pink/10 text-brand-pink px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1 border border-brand-pink/30">
+        <i data-lucide="check-circle" class="w-4 h-4"></i> 已簽署
+    </span>
+    <span id="sigtime-owner" class="text-[11px] text-gray-400 font-bold"></span>
+</div>
+</section>
 
 <!-- 美容契約送出按鈕 -->
 <button onclick="submitGrooming()" class="w-full bg-gradient-to-r from-brand-pink to-[#E0A0AE] text-white px-6 py-5 rounded-2xl font-bold shadow-lg shadow-brand-pink/30 hover:shadow-xl hover:shadow-brand-pink/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg tracking-wide">
@@ -1408,10 +1481,10 @@ body {
     </div>
 </main>
 
-<!-- 簽名 Modal 優化版 -->
+<!-- 簽名 Modal 全螢幕優化版 -->
 <div id="signatureModal" class="fixed inset-0 z-[9999] hidden flex-col transition-opacity duration-300 opacity-0 bg-white">
     <!-- 頂部操作欄 -->
-    <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-100 bg-brand-bg shrink-0 safe-area-top">
+    <div class="signature-header flex justify-between items-center p-4 md:p-6 border-b border-gray-100 bg-brand-bg safe-area-top">
         <button onclick="closeSignatureModal()" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 text-gray-600 font-bold active:scale-95 transition-transform">
             <i data-lucide="x" class="w-5 h-5"></i>
             <span class="hidden sm:inline">取消</span>
@@ -1427,23 +1500,25 @@ body {
             <i data-lucide="check" class="w-5 h-5"></i>
         </button>
     </div>
-    
+
     <!-- 簽名區域 -->
-<div class="flex-1 bg-white/80 backdrop-blur-sm relative overflow-hidden touch-none select-none border-t border-b border-gray-100/50">
-    <canvas id="signatureCanvas" class="block w-full h-full cursor-crosshair touch-action-none"></canvas>
+<div class="signature-canvas-wrap">
+    <canvas id="signatureCanvas" class="block w-full h-full"></canvas>
     
     <!-- 簽名提示 -->
-    <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 transition-opacity" id="signatureHint">
-        <div class="text-center bg-white/90 backdrop-blur-md px-6 py-4 rounded-2xl shadow-lg border border-gray-100">
-            <i data-lucide="pen-tool" class="w-12 h-12 mx-auto text-brand-main/30 mb-2"></i>
-            <p class="text-brand-main/30 font-bold">在此區域簽名</p>
+<div id="signatureHint" class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 transition-opacity">
+    <div class="text-center bg-white/90 backdrop-blur-md px-10 py-8 rounded-3xl shadow-xl border border-brand-main/10">
+        <div class="w-20 h-20 rounded-full bg-brand-main/10 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="pen-tool" class="w-10 h-10 text-brand-main/40"></i>
         </div>
+        <p class="text-lg font-black text-brand-main/50 tracking-widest">在此區域簽名</p>
     </div>
 </div>
+</div>
 
-    <!-- 底部操作欄（固定） -->
-    <div class="fixed bottom-0 left-0 right-0 p-6 pb-[max(2rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
-        <div class="flex justify-center pointer-events-auto">
+    <!-- 底部操作欄 -->
+    <div class="signature-footer p-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <div class="flex justify-center">
             <button onclick="clearCanvas()" class="flex items-center gap-2 px-8 py-4 bg-white border-2 border-red-200 text-red-500 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform hover:bg-red-50">
                 <i data-lucide="trash-2" class="w-5 h-5"></i>
                 清除重寫
@@ -1945,31 +2020,31 @@ function toggleSection(containerId, maskId, textId, iconId) {
 }
 
 
-// 優化後的 Canvas 重設大小函式 (防止簽名遺失)
+// 優化後的 Canvas 重設大小函式 (支援全螢幕)
 function resizeCanvas(canvas) {
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    
-    // 1. 備份當前內容 (如果有簽名板實例且非空)
+
     let storedData = null;
     if (signaturePad && !signaturePad.isEmpty()) {
         storedData = signaturePad.toData();
     }
 
-    // 2. 重設大小 (這會清空畫布)
-    const width = canvas.offsetWidth || canvas.parentElement.clientWidth;
-    const height = canvas.offsetHeight || canvas.parentElement.clientHeight;
-    
+    const parent = canvas.parentElement;
+    const rect = parent.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+
+    if (width === 0 || height === 0) return;
+
     canvas.width = width * ratio;
     canvas.height = height * ratio;
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
     canvas.getContext("2d").scale(ratio, ratio);
 
-    // 3. 恢復內容 (如果原本有資料)
     if (storedData) {
         signaturePad.fromData(storedData);
     } else if (signaturePad) {
-        // 如果原本是空的，確保清空狀態一致
         signaturePad.clear();
     }
 }
@@ -2076,13 +2151,15 @@ function openSignatureModal(id) {
         resizeCanvas(canvas);
         
         if (!signaturePad) {
+const isTouch = window.matchMedia('(pointer: coarse)').matches;
+
 signaturePad = new SignaturePad(canvas, {
     backgroundColor: 'rgba(255, 255, 255, 0)',
     penColor: '#5D5046',
-    velocityFilterWeight: 0.7,
-    minWidth: 0.5,  // 最細線條
-    maxWidth: 2.5, // 最粗線條
-    throttle: 16,
+    velocityFilterWeight: isTouch ? 0.7 : 0.3,
+    minWidth: isTouch ? 0.6 : 1.0,
+    maxWidth: isTouch ? 3.0 : 2.2,
+    throttle: isTouch ? 16 : 8,
     minDistance: 2
 });
 
@@ -2141,35 +2218,62 @@ function saveSignature() {
         return;
     }
 
-    // ✨ 新增：自動裁切空白
     const canvas = document.getElementById('signatureCanvas');
     const trimmedDataUrl = trimCanvas(canvas);
-    
-    // 如果裁切失敗（例如完全沒畫），就用原本的
     const dataUrl = trimmedDataUrl || signaturePad.toDataURL("image/png");
 
     const imgEl = document.getElementById(`img-${currentSigId}`);
     const placeholderEl = document.getElementById(`placeholder-${currentSigId}`);
-    
+
     if (imgEl && placeholderEl) {
-        imgEl.src = dataUrl; // ✅ 這裡修正了變數名稱
+        imgEl.src = dataUrl;
         imgEl.classList.remove('hidden');
         placeholderEl.classList.add('hidden');
-        
+
         const container = imgEl.parentElement;
         container.classList.add(currentSigId === 'buyer' ? 'border-brand-purple' : 'border-brand-pink');
         container.classList.add(currentSigId === 'buyer' ? 'bg-brand-purple/5' : 'bg-brand-pink/5');
         container.classList.remove('border-dashed', 'border-gray-300');
         container.classList.add('border-solid');
     }
-    
-    if (currentSigId === 'buyer') {
-        const dateEl = document.getElementById('date-buyer');
-        if(dateEl) dateEl.innerText = new Date().toLocaleDateString();
+
+    // ✅ 簽署時間顯示（格式跟抱抱熊一樣）
+    const now = new Date();
+    const timeText = now.toLocaleString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    });
+
+    const statusEl = document.getElementById(`sigstatus-${currentSigId}`);
+    const timeEl = document.getElementById(`sigtime-${currentSigId}`);
+
+    if (statusEl && timeEl) {
+        statusEl.classList.remove('hidden');
+        timeEl.innerText = `簽署時間：${timeText}`;
     }
+
     closeSignatureModal();
 }
+function reSign(id) {
+    const img = document.getElementById(`img-${id}`);
+    const placeholder = document.getElementById(`placeholder-${id}`);
+    const status = document.getElementById(`sigstatus-${id}`);
 
+    if (img) {
+        const box = img.parentElement;
+        img.src = "";
+        img.classList.add('hidden');
+        if (box) {
+            box.classList.remove('border-brand-purple','border-brand-pink','bg-brand-purple/5','bg-brand-pink/5','border-solid');
+            box.classList.add('border-dashed','border-gray-300');
+        }
+    }
+
+    if (placeholder) placeholder.classList.remove('hidden');
+    if (status) status.classList.add('hidden');
+
+    openSignatureModal(id);
+}
 
         // --- 輔助功能 ---
         function toggleChipInput(show) {
